@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247; /* Purple 500 for Android feel */
+            --primary-glow: 168, 85, 247; /* Purple 500 */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -239,15 +239,22 @@
                             </div>
                         </div>
 
-                        <!-- DNS -->
+                        <!-- DNS (Ahora con lógica Dual/Exclusiva) -->
                         <div id="dns-option-group" class="glass-option rounded-xl p-4 disabled-option">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <div class="font-semibold text-sm text-theme-main">DNS Seguro</div>
-                                    <div class="text-xs text-theme-muted">Google + Cloudflare</div>
+                                    <div class="text-xs text-theme-muted">ON: Exclusivo / OFF: Dual</div>
                                 </div>
-                                <input type="checkbox" id="dns-toggle" class="toggle-checkbox" checked disabled>
+                                <input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled>
                                 <label for="dns-toggle" class="toggle-switch"></label>
+                            </div>
+                            <!-- Menú desplegable (visible solo si está ON) -->
+                            <div id="dns-details" class="hidden mt-2">
+                                <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="google">Solo Google</option>
+                                    <option value="cloudflare">Solo Cloudflare</option>
+                                </select>
                             </div>
                             <div class="text-[10px] text-theme-muted font-mono bg-theme-input p-2 rounded border border-gray-500/10 mt-1">
                                 Strategy: ipv4_only<br>Fake-IP Activado
@@ -345,6 +352,8 @@
         
         const dnsOptionGroup = document.getElementById('dns-option-group');
         const dnsToggle = document.getElementById('dns-toggle');
+        const dnsDetails = document.getElementById('dns-details'); // Referencia al detalle
+        const dnsSelect = document.getElementById('dns-select');
 
         const keepAliveOptionGroup = document.getElementById('keep-alive-option-group');
         const keepAliveToggle = document.getElementById('keep-alive-toggle');
@@ -380,6 +389,7 @@
             });
         }
         setupToggleLogic(clientFingerprintToggle, clientFingerprintDetails);
+        setupToggleLogic(dnsToggle, dnsDetails); // Lógica de visualización para DNS
         
         function enableGroup(group, toggle) {
             group.classList.remove('disabled-option');
@@ -395,7 +405,8 @@
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
                 enableGroup(dnsOptionGroup, dnsToggle);
-                dnsToggle.checked = true; // Always ON for Android (Dual DNS)
+                // NOTA: Ya no forzamos dnsToggle.checked = true aquí.
+                // Se deja al usuario. Si está OFF = Dual. Si está ON = Custom.
 
                 if (isGrpcAvailable) {
                     enableGroup(keepAliveOptionGroup, keepAliveToggle);
@@ -405,7 +416,7 @@
                 }
             } else {
                 disableGroup(keepAliveOptionGroup, keepAliveToggle);
-                disableGroup(dnsOptionGroup, dnsToggle);
+                disableGroup(dnsOptionGroup, dnsToggle, dnsDetails);
             }
 
             if (isTlsAvailable) {
@@ -626,20 +637,40 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration for Android (Default Double DNS)
+            // DNS Configuration Logic
+            const isDnsCustomEnabled = dnsToggle.checked;
+            const selectedDns = dnsSelect.value;
+
+            // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
             const localDns = { "tag": "local", "type": "local", "detour": "direct" };
             const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
 
+            // Construct DNS Server list based on toggle
+            let activeDnsServers = [];
+            
+            if (isDnsCustomEnabled) {
+                // EXCLUSIVE MODE: Only add the selected one
+                if (selectedDns === 'google') {
+                    activeDnsServers.push(googleDns);
+                } else if (selectedDns === 'cloudflare') {
+                    activeDnsServers.push(cloudflareDns);
+                }
+            } else {
+                // DEFAULT (OFF): Dual Mode (Both)
+                activeDnsServers.push(googleDns, cloudflareDns);
+            }
+            
+            // Always add Local and FakeIP
+            activeDnsServers.push(localDns, fakeipDns);
+
             const config = {
                 "log": { "level": "error", "timestamp": true }, 
                 "dns": { 
-                    "servers": [googleDns, cloudflareDns, localDns, fakeipDns],
+                    "servers": activeDnsServers,
                     "rules": [
-                        { "outbound": "any", "server": "local" }, // This one is usually safe on Android builds, if not, remove it. 
-                        // Actually, for consistency with PC 1.12+, let's remove it to be safe.
-                        // { "outbound": "any", "server": "local" }, <-- Removed for safety
+                        // Removed "outbound": "any" rule (Fixed)
                         { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
                     "fakeip": {
