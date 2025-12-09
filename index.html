@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador Sing-box Pro</title>
-    <!-- Tailwind CSS -->
+    <title>Generador Sing-box Android</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-glow: 16, 185, 129; /* Emerald 500 */
-            
-            /* Dark Mode Variables (Default) */
+            --primary-glow: 168, 85, 247; /* Purple 500 for Android feel */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -25,15 +20,12 @@
             --option-bg: rgba(30, 41, 59, 0.5);
             --terminal-bg: #0f1115;
             --terminal-header: #1e1e1e;
-            
-            /* Background Gradient Colors */
-            --gradient-1: rgba(16, 185, 129, 0.15);
-            --gradient-2: rgba(99, 102, 241, 0.15);
+            --gradient-1: rgba(168, 85, 247, 0.15);
+            --gradient-2: rgba(236, 72, 153, 0.15);
         }
 
         body.light-mode {
-            /* Light Mode Variables */
-            --bg-color: #f0f9ff;
+            --bg-color: #fdf4ff;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --card-bg: rgba(255, 255, 255, 0.75);
@@ -42,10 +34,8 @@
             --option-bg: #ffffff;
             --terminal-bg: #f8fafc;
             --terminal-header: #e2e8f0;
-            
-            /* Light Gradients */
-            --gradient-1: rgba(52, 211, 153, 0.2);
-            --gradient-2: rgba(129, 140, 248, 0.2);
+            --gradient-1: rgba(216, 180, 254, 0.2);
+            --gradient-2: rgba(253, 164, 175, 0.2);
         }
 
         body {
@@ -59,7 +49,6 @@
             transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        /* Glassmorphism Classes */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -74,7 +63,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Disabled Option State */
         .disabled-option {
             opacity: 0.5;
             pointer-events: none;
@@ -94,7 +82,6 @@
             outline: none;
         }
 
-        /* Theme Toggle Button */
         .theme-toggle-btn {
             position: fixed;
             top: 1.5rem;
@@ -116,27 +103,20 @@
         }
         .theme-toggle-btn:hover { transform: scale(1.1); }
 
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-main); }
 
-        /* Animation */
-        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
-        .verificando::after { display: inline-block; animation: dots 1.4s infinite; content: '.'; }
-
-        /* Switches */
         .toggle-checkbox { display: none; }
         .toggle-switch {
             width: 44px; height: 24px;
-            background: #cbd5e1; /* Default greyish */
+            background: #cbd5e1;
             border-radius: 99px;
             position: relative;
             cursor: pointer;
             transition: 0.3s;
         }
-        /* Dark mode default switch bg */
         body:not(.light-mode) .toggle-switch { background: #334155; }
         
         .toggle-switch::after {
@@ -148,67 +128,56 @@
             transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .toggle-checkbox:checked + .toggle-switch { background: #10b981; }
+        .toggle-checkbox:checked + .toggle-switch { background: #a855f7; }
         .toggle-checkbox:checked + .toggle-switch::after { transform: translateX(20px); }
         .toggle-checkbox:disabled + .toggle-switch { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
 
-        /* Mode Cards */
         .mode-card { cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; }
         .mode-card:hover { transform: translateY(-2px); }
         .mode-card.active {
             background: rgba(var(--primary-glow), 0.1);
-            border-color: #10b981;
+            border-color: #a855f7;
             box-shadow: 0 0 20px rgba(var(--primary-glow), 0.15);
         }
-        .mode-card.active i { color: #10b981; }
+        .mode-card.active i { color: #a855f7; }
 
-        /* Helper Classes for Theme transition */
         .text-theme-main { color: var(--text-main); }
         .text-theme-muted { color: var(--text-muted); }
         .bg-theme-input { background: var(--input-bg); }
         
-        /* Terminal Output Specifics */
         .terminal-header { background: var(--terminal-header); border-bottom: 1px solid var(--card-border); }
         .terminal-body { background: var(--terminal-bg); }
         .code-content { color: var(--text-main); }
-        body:not(.light-mode) .code-content { color: #a7f3d0; } /* Greenish text in dark mode */
-        body.light-mode .code-content { color: #0f172a; } /* Dark text in light mode */
+        body:not(.light-mode) .code-content { color: #d8b4fe; }
+        body.light-mode .code-content { color: #0f172a; }
 
     </style>
 </head>
 <body class="min-h-screen py-10 px-4 flex justify-center items-start">
 
-    <!-- Theme Toggle Button -->
     <button id="theme-toggle" class="theme-toggle-btn" title="Cambiar Tema">
         <i class="fas fa-moon text-xl" id="theme-icon"></i>
     </button>
 
     <div class="w-full max-w-5xl space-y-8">
         
-        <!-- Header -->
         <div class="text-center space-y-2">
-            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
-                Sing-box Generator
+            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                Sing-box Android
             </h1>
-            <p class="text-theme-muted text-sm font-light tracking-wide">OPTIMIZADO PARA BOX FOR MAGISK</p>
+            <p class="text-theme-muted text-sm font-light tracking-wide">OPTIMIZADO PARA BOX FOR MAGISK (1.12+)</p>
         </div>
 
-        <!-- Status Notification -->
-        <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-4 text-center font-medium transition-all duration-300 text-theme-main">
-            <!-- Dynamic Content -->
-        </div>
+        <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-4 text-center font-medium transition-all duration-300 text-theme-main"></div>
 
-        <!-- Main Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Left Column: Inputs & Controls -->
             <div class="lg:col-span-7 space-y-6">
                 
-                <!-- Input Area -->
                 <div class="glass-card rounded-2xl p-6 space-y-4">
                     <div class="flex justify-between items-center">
                         <label class="text-theme-main font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-link text-emerald-500"></i> Enlaces de Configuración
+                            <i class="fa-solid fa-link text-purple-500"></i> Enlaces de Configuración
                         </label>
                         <span class="text-xs text-theme-muted bg-theme-input px-2 py-1 rounded border border-gray-500/20">VLESS • VMESS • TROJAN</span>
                     </div>
@@ -217,31 +186,25 @@
                         placeholder="Pegar enlace vless://..."></textarea>
                 </div>
 
-                <!-- Mode Selection -->
                 <div class="glass-card rounded-2xl p-6">
                     <h3 class="text-theme-main font-semibold mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-network-wired text-cyan-500"></i> Modo de Conexión
+                        <i class="fa-brands fa-android text-pink-500"></i> Configuración Magisk
                     </h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- TUN Button -->
-                        <div id="tun-btn" class="mode-card glass-card rounded-xl p-4 text-center active" onclick="selectMode('tun')">
-                            <i class="fa-solid fa-shield-halved text-3xl mb-2 text-theme-muted"></i>
-                            <div class="font-bold text-theme-main">Modo TUN</div>
-                            <div class="text-xs text-theme-muted mt-1">Routing Automático</div>
+                        <div id="tun-btn" class="mode-card glass-option rounded-xl p-3 text-center active flex flex-col justify-center items-center" onclick="selectMode('tun')">
+                            <i class="fa-solid fa-shield-halved text-xl mb-1 text-theme-muted"></i>
+                            <div class="font-bold text-sm text-theme-main">TUN</div>
                         </div>
-                        <!-- TPROXY Button -->
-                        <div id="tproxy-btn" class="mode-card glass-card rounded-xl p-4 text-center" onclick="selectMode('tproxy')">
-                            <i class="fa-solid fa-route text-3xl mb-2 text-theme-muted"></i>
-                            <div class="font-bold text-theme-main">Modo TProxy</div>
-                            <div class="text-xs text-theme-muted mt-1">Enhanced / Magisk</div>
+                        <div id="tproxy-btn" class="mode-card glass-option rounded-xl p-3 text-center flex flex-col justify-center items-center" onclick="selectMode('tproxy')">
+                            <i class="fa-solid fa-route text-xl mb-1 text-theme-muted"></i>
+                            <div class="font-bold text-sm text-theme-main">TPROXY</div>
                         </div>
                     </div>
-                    <div id="mode-status-text" class="text-center text-xs text-emerald-500 mt-4 font-mono opacity-80">
+                    <div id="mode-status-text" class="text-center text-xs text-purple-400 mt-4 font-mono opacity-80">
                         TUN: 172.19.0.1/30 (Auto Route)
                     </div>
                 </div>
 
-                <!-- Advanced Options Grid -->
                 <div class="glass-card rounded-2xl p-6">
                     <h3 class="text-theme-main font-semibold mb-6 flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-purple-500"></i> Ajustes Avanzados
@@ -249,7 +212,7 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
-                        <!-- Keep Alive (Solo gRPC) -->
+                        <!-- Keep Alive -->
                         <div id="keep-alive-option-group" class="glass-option rounded-xl p-4 disabled-option">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
@@ -264,21 +227,30 @@
                             </div>
                         </div>
 
+                        <!-- Insecure (Skip Verify) -->
+                        <div id="insecure-option-group" class="glass-option rounded-xl p-4 disabled-option">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="font-semibold text-sm text-theme-main">Insecure</div>
+                                    <div class="text-xs text-theme-muted text-yellow-500">Skip Verify (SNI)</div>
+                                </div>
+                                <input type="checkbox" id="insecure-toggle" class="toggle-checkbox" checked disabled>
+                                <label for="insecure-toggle" class="toggle-switch"></label>
+                            </div>
+                        </div>
+
                         <!-- DNS -->
                         <div id="dns-option-group" class="glass-option rounded-xl p-4 disabled-option">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <div class="font-semibold text-sm text-theme-main">DNS Personalizado</div>
-                                    <div class="text-xs text-theme-muted">Si no: Google + Cloudflare</div>
+                                    <div class="font-semibold text-sm text-theme-main">DNS Seguro</div>
+                                    <div class="text-xs text-theme-muted">Google + Cloudflare</div>
                                 </div>
-                                <input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled>
+                                <input type="checkbox" id="dns-toggle" class="toggle-checkbox" checked disabled>
                                 <label for="dns-toggle" class="toggle-switch"></label>
                             </div>
-                            <div id="dns-details" class="hidden mt-2">
-                                <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
-                                    <option value="google">Solo Google (8.8.8.8)</option>
-                                    <option value="cloudflare">Solo Cloudflare (1.1.1.1)</option>
-                                </select>
+                            <div class="text-[10px] text-theme-muted font-mono bg-theme-input p-2 rounded border border-gray-500/10 mt-1">
+                                Strategy: ipv4_only<br>Fake-IP Activado
                             </div>
                         </div>
 
@@ -296,26 +268,7 @@
                                 <select id="client-fingerprint-select" class="modern-input w-full rounded text-xs p-1">
                                     <option value="chrome" selected>Chrome</option>
                                     <option value="randomized">Aleatorio</option>
-                                    <option value="ios">iOS</option>
                                     <option value="android">Android</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- ALPN -->
-                        <div id="alpn-option-group" class="glass-option rounded-xl p-4 disabled-option">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <div class="font-semibold text-sm text-theme-main">Forzar ALPN</div>
-                                    <div class="text-xs text-theme-muted">Negociación</div>
-                                </div>
-                                <input type="checkbox" id="alpn-toggle" class="toggle-checkbox" disabled>
-                                <label for="alpn-toggle" class="toggle-switch"></label>
-                            </div>
-                            <div id="alpn-details" class="hidden mt-2">
-                                <select id="alpn-select" class="modern-input w-full rounded text-xs p-1">
-                                    <option value="h2" selected>h2</option>
-                                    <option value="h2,http/1.1">h2, http/1.1</option>
                                 </select>
                             </div>
                         </div>
@@ -324,20 +277,17 @@
                 </div>
             </div>
 
-            <!-- Right Column: Output & Actions -->
             <div class="lg:col-span-5 flex flex-col gap-6">
                 
-                <!-- Action Buttons -->
                 <div class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-6 z-10">
-                    <button id="generate-btn" class="w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 group transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
-                        <i class="fa-solid fa-bolt group-hover:animate-pulse"></i> GENERAR CONFIG
+                    <button id="generate-btn" class="w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 group transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
+                        <i class="fa-solid fa-bolt group-hover:animate-pulse"></i> GENERAR CONFIG ANDROID
                     </button>
                     <button id="copy-btn" class="w-full py-3 rounded-xl font-semibold text-theme-main bg-gray-500/20 hover:bg-gray-500/30 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         <i id="copy-icon" class="fa-solid fa-copy"></i> <span id="copy-text">Copiar JSON</span>
                     </button>
                 </div>
 
-                <!-- Output Area (Terminal Style) -->
                 <div class="glass-card rounded-2xl overflow-hidden flex-1 flex flex-col min-h-[500px]">
                     <div class="terminal-header px-4 py-2 flex justify-between items-center">
                         <span class="text-xs text-theme-muted font-mono">config.json</span>
@@ -358,7 +308,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- THEME LOGIC ---
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         
@@ -375,7 +324,6 @@
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
         });
 
-        // --- GENERATOR LOGIC ---
         const generateBtn = document.getElementById('generate-btn');
         const copyBtn = document.getElementById('copy-btn');
         const proxyLinksInput = document.getElementById('proxy-links');
@@ -387,12 +335,8 @@
         const tunBtn = document.getElementById('tun-btn');
         const tproxyBtn = document.getElementById('tproxy-btn');
         const modeStatusText = document.getElementById('mode-status-text');
+        
         let selectedMode = 'tun';
-
-        const alpnOptionGroup = document.getElementById('alpn-option-group');
-        const alpnToggle = document.getElementById('alpn-toggle');
-        const alpnDetails = document.getElementById('alpn-details');
-        const alpnSelect = document.getElementById('alpn-select');
 
         const clientFingerprintOptionGroup = document.getElementById('client-fingerprint-option-group');
         const clientFingerprintToggle = document.getElementById('client-fingerprint-toggle');
@@ -401,11 +345,12 @@
         
         const dnsOptionGroup = document.getElementById('dns-option-group');
         const dnsToggle = document.getElementById('dns-toggle');
-        const dnsDetails = document.getElementById('dns-details');
-        const dnsSelect = document.getElementById('dns-select');
 
         const keepAliveOptionGroup = document.getElementById('keep-alive-option-group');
         const keepAliveToggle = document.getElementById('keep-alive-toggle');
+
+        const insecureOptionGroup = document.getElementById('insecure-option-group');
+        const insecureToggle = document.getElementById('insecure-toggle');
 
         let validProxies = [];
         let validationTimeout;
@@ -434,9 +379,7 @@
                 }
             });
         }
-        setupToggleLogic(alpnToggle, alpnDetails);
         setupToggleLogic(clientFingerprintToggle, clientFingerprintDetails);
-        setupToggleLogic(dnsToggle, dnsDetails); // Add logic for DNS Details visibility
         
         function enableGroup(group, toggle) {
             group.classList.remove('disabled-option');
@@ -449,32 +392,29 @@
             if(details) details.classList.add('hidden');
         }
 
-        // --- INTELLIGENT LOGIC ---
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
-                // DNS ALWAYS ENABLED (FIXED), but defaults to unchecked (Dual DNS)
                 enableGroup(dnsOptionGroup, dnsToggle);
-                // dnsToggle.checked = false; // Let it stay as is or default to false in HTML
-                
-                // Keep Alive: Enable if ANY gRPC detected
+                dnsToggle.checked = true; // Always ON for Android (Dual DNS)
+
                 if (isGrpcAvailable) {
                     enableGroup(keepAliveOptionGroup, keepAliveToggle);
                     keepAliveToggle.checked = true;
                 } else {
                     disableGroup(keepAliveOptionGroup, keepAliveToggle);
                 }
-
             } else {
                 disableGroup(keepAliveOptionGroup, keepAliveToggle);
-                disableGroup(dnsOptionGroup, dnsToggle, dnsDetails);
+                disableGroup(dnsOptionGroup, dnsToggle);
             }
 
             if (isTlsAvailable) {
-                enableGroup(alpnOptionGroup, alpnToggle);
                 enableGroup(clientFingerprintOptionGroup, clientFingerprintToggle);
+                enableGroup(insecureOptionGroup, insecureToggle);
+                insecureToggle.checked = true; 
             } else {
-                disableGroup(alpnOptionGroup, alpnToggle, alpnDetails);
                 disableGroup(clientFingerprintOptionGroup, clientFingerprintToggle, clientFingerprintDetails);
+                disableGroup(insecureOptionGroup, insecureToggle);
             }
         }
         
@@ -524,7 +464,7 @@
             if (validProxies.length > 0) {
                 const jsonConfig = generateSingboxConfig(validProxies);
                 outputConfig.textContent = jsonConfig;
-                setStatus('🚀 ¡Configuración Generada!', 'success');
+                setStatus('🚀 ¡Configuración Android Generada!', 'success');
                 copyBtn.disabled = false;
             }
         });
@@ -542,7 +482,7 @@
                     document.body.removeChild(textarea);
                     
                     copyText.textContent = '¡Copiado!';
-                    copyIcon.className = 'fa-solid fa-check text-emerald-500';
+                    copyIcon.className = 'fa-solid fa-check text-purple-500';
                     setTimeout(() => {
                         copyText.textContent = 'Copiar JSON';
                         copyIcon.className = 'fa-solid fa-copy';
@@ -564,13 +504,12 @@
                 statusContainer.classList.add('text-red-400', 'bg-red-500/10');
                 statusContainer.style.borderColor = 'rgba(239, 68, 68, 0.3)';
             } else if (type === 'success') {
-                statusContainer.classList.add('text-emerald-400', 'bg-emerald-500/10');
-                statusContainer.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                statusContainer.classList.add('text-purple-400', 'bg-purple-500/10');
+                statusContainer.style.borderColor = 'rgba(168, 85, 247, 0.3)';
             }
             statusContainer.innerHTML = message;
         }
 
-        // --- PARSING LOGIC ---
         function parseAndValidateLink(link, index) {
             const result = { proxy: null, errors: [], warnings: [] };
             try {
@@ -687,41 +626,20 @@
 
         function generateSingboxConfig(proxies) {
             
-            // 1. DNS CONFIGURATION LOGIC (EXCLUSIVE VS DUAL)
-            const isDnsCustomEnabled = dnsToggle.checked;
-            const selectedDns = dnsSelect.value;
-            
-            // Define servers objects
-            const googleDns = { "tag": "google", "address": "8.8.8.8", "detour": "proxy" };
-            const cloudflareDns = { "tag": "cloudflare", "address": "1.1.1.1", "detour": "proxy" };
-            
-            const dnsServers = [];
-            
-            if (isDnsCustomEnabled) {
-                // EXCLUSIVE MODE: Only inject the selected one
-                if (selectedDns === 'google') {
-                    dnsServers.push(googleDns);
-                } else {
-                    dnsServers.push(cloudflareDns);
-                }
-            } else {
-                // DUAL MODE (DEFAULT): Inject BOTH for redundancy
-                dnsServers.push(googleDns, cloudflareDns);
-            }
-
-            // Add local and fakeip (always needed)
-            dnsServers.push(
-                { "tag": "local", "address": "local", "detour": "direct" },
-                { "tag": "fakeip", "address": "fakeip" }
-            );
+            // DNS Configuration for Android (Default Double DNS)
+            const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
+            const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
+            const localDns = { "tag": "local", "type": "local", "detour": "direct" };
+            const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
 
             const config = {
                 "log": { "level": "error", "timestamp": true }, 
                 "dns": { 
-                    "servers": dnsServers,
+                    "servers": [googleDns, cloudflareDns, localDns, fakeipDns],
                     "rules": [
-                        { "outbound": "any", "server": "local" },
-                        { "geosite": "private", "server": "local" }, // LAN Protection
+                        { "outbound": "any", "server": "local" }, // This one is usually safe on Android builds, if not, remove it. 
+                        // Actually, for consistency with PC 1.12+, let's remove it to be safe.
+                        // { "outbound": "any", "server": "local" }, <-- Removed for safety
                         { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
                     "fakeip": {
@@ -734,7 +652,7 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
-                        { "protocol": "dns", "outbound": "dns-out" },
+                        { "protocol": "dns", "action": "hijack-dns" },
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
                     "final": "proxy",
@@ -742,12 +660,13 @@
                 }
             };
 
+            // Inbounds Logic (Magisk Ports)
             if (selectedMode === 'tun') {
                 config.inbounds.push({
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
-                    "inet4_address": "172.19.0.1/30",
+                    "address": ["172.19.0.1/30"], // FIXED: Array address
                     "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
@@ -817,7 +736,7 @@
                 outbound.tls = {
                     "enabled": true,
                     "server_name": p.servername,
-                    "insecure": (p['skip-cert-verify'] === true)
+                    "insecure": insecureToggle.checked 
                 };
                 
                 if (clientFingerprintToggle.checked) {
@@ -825,10 +744,6 @@
                         "enabled": true,
                         "fingerprint": clientFingerprintSelect.value
                     };
-                }
-
-                if (alpnToggle.checked) {
-                    outbound.tls.alpn = alpnSelect.value.split(',').map(s => s.trim());
                 }
 
                 if (p.security === 'reality') {
@@ -847,7 +762,7 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
-                { "type": "dns", "tag": "dns-out" },
+                { "type": "dns", "tag": "dns-out" }, // Kept for Android routing
                 { "type": "block", "tag": "block" }
             );
 
