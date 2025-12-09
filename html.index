@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Sing-box Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-glow: 16, 185, 129; /* Emerald 500 */
+            
+            /* Dark Mode Variables (Default) */
+            --bg-color: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --option-bg: rgba(30, 41, 59, 0.5);
+            --terminal-bg: #0f1115;
+            --terminal-header: #1e1e1e;
+            
+            /* Background Gradient Colors */
+            --gradient-1: rgba(16, 185, 129, 0.15);
+            --gradient-2: rgba(99, 102, 241, 0.15);
+        }
+
+        body.light-mode {
+            /* Light Mode Variables */
+            --bg-color: #f0f9ff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(0, 0, 0, 0.05);
+            --input-bg: #ffffff;
+            --option-bg: #ffffff;
+            --terminal-bg: #f8fafc;
+            --terminal-header: #e2e8f0;
+            
+            /* Light Gradients */
+            --gradient-1: rgba(52, 211, 153, 0.2);
+            --gradient-2: rgba(129, 140, 248, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, var(--gradient-1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--gradient-2) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+
+        .glass-option {
+            background: var(--option-bg);
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        /* Disabled Option State */
+        .disabled-option {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+
+        .modern-input {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+        .modern-input:focus {
+            border-color: rgba(var(--primary-glow), 0.5);
+            box-shadow: 0 0 15px rgba(var(--primary-glow), 0.2);
+            outline: none;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .theme-toggle-btn:hover { transform: scale(1.1); }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-main); }
+
+        /* Animation */
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+        .verificando::after { display: inline-block; animation: dots 1.4s infinite; content: '.'; }
+
+        /* Switches */
+        .toggle-checkbox { display: none; }
+        .toggle-switch {
+            width: 44px; height: 24px;
+            background: #cbd5e1; /* Default greyish */
+            border-radius: 99px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        /* Dark mode default switch bg */
+        body:not(.light-mode) .toggle-switch { background: #334155; }
+        
+        .toggle-switch::after {
+            content: ''; position: absolute;
+            top: 3px; left: 3px;
+            width: 18px; height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-checkbox:checked + .toggle-switch { background: #10b981; }
+        .toggle-checkbox:checked + .toggle-switch::after { transform: translateX(20px); }
+        .toggle-checkbox:disabled + .toggle-switch { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+        /* Mode Cards */
+        .mode-card { cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; }
+        .mode-card:hover { transform: translateY(-2px); }
+        .mode-card.active {
+            background: rgba(var(--primary-glow), 0.1);
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(var(--primary-glow), 0.15);
+        }
+        .mode-card.active i { color: #10b981; }
+
+        /* Helper Classes for Theme transition */
+        .text-theme-main { color: var(--text-main); }
+        .text-theme-muted { color: var(--text-muted); }
+        .bg-theme-input { background: var(--input-bg); }
+        
+        /* Terminal Output Specifics */
+        .terminal-header { background: var(--terminal-header); border-bottom: 1px solid var(--card-border); }
+        .terminal-body { background: var(--terminal-bg); }
+        .code-content { color: var(--text-main); }
+        body:not(.light-mode) .code-content { color: #a7f3d0; } /* Greenish text in dark mode */
+        body.light-mode .code-content { color: #0f172a; } /* Dark text in light mode */
+
+    </style>
+</head>
+<body class="min-h-screen py-10 px-4 flex justify-center items-start">
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="theme-toggle-btn" title="Cambiar Tema">
+        <i class="fas fa-moon text-xl" id="theme-icon"></i>
+    </button>
+
+    <div class="w-full max-w-5xl space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-500">
+                Sing-box Generator
+            </h1>
+            <p class="text-theme-muted text-sm font-light tracking-wide">OPTIMIZADO PARA BOX FOR MAGISK</p>
+        </div>
+
+        <!-- Status Notification -->
+        <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-4 text-center font-medium transition-all duration-300 text-theme-main">
+            <!-- Dynamic Content -->
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Inputs & Controls -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Input Area -->
+                <div class="glass-card rounded-2xl p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-theme-main font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-link text-emerald-500"></i> Enlaces de Configuración
+                        </label>
+                        <span class="text-xs text-theme-muted bg-theme-input px-2 py-1 rounded border border-gray-500/20">VLESS • VMESS • TROJAN</span>
+                    </div>
+                    <textarea id="proxy-links" 
+                        class="modern-input w-full h-40 rounded-xl p-4 text-sm placeholder-gray-500" 
+                        placeholder="Pegar enlace vless://..."></textarea>
+                </div>
+
+                <!-- Mode Selection -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-theme-main font-semibold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-cyan-500"></i> Modo de Conexión
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- TUN Button -->
+                        <div id="tun-btn" class="mode-card glass-card rounded-xl p-4 text-center active" onclick="selectMode('tun')">
+                            <i class="fa-solid fa-shield-halved text-3xl mb-2 text-theme-muted"></i>
+                            <div class="font-bold text-theme-main">Modo TUN</div>
+                            <div class="text-xs text-theme-muted mt-1">Routing Automático</div>
+                        </div>
+                        <!-- TPROXY Button -->
+                        <div id="tproxy-btn" class="mode-card glass-card rounded-xl p-4 text-center" onclick="selectMode('tproxy')">
+                            <i class="fa-solid fa-route text-3xl mb-2 text-theme-muted"></i>
+                            <div class="font-bold text-theme-main">Modo TProxy</div>
+                            <div class="text-xs text-theme-muted mt-1">Enhanced / Magisk</div>
+                        </div>
+                    </div>
+                    <div id="mode-status-text" class="text-center text-xs text-emerald-500 mt-4 font-mono opacity-80">
+                        TUN: 172.19.0.1/30 (Auto Route)
+                    </div>
+                </div>
+
+                <!-- Advanced Options Grid -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-theme-main font-semibold mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-purple-500"></i> Ajustes Avanzados
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Keep Alive (Solo gRPC) -->
+                        <div id="keep-alive-option-group" class="glass-option rounded-xl p-4 disabled-option">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="font-semibold text-sm text-theme-main">Keep Alive</div>
+                                    <div class="text-xs text-theme-muted">gRPC Optimizado</div>
+                                </div>
+                                <input type="checkbox" id="keep-alive-toggle" class="toggle-checkbox" checked disabled>
+                                <label for="keep-alive-toggle" class="toggle-switch"></label>
+                            </div>
+                            <div class="text-[10px] text-theme-muted font-mono bg-theme-input p-2 rounded border border-gray-500/10">
+                                idle_timeout: 2h<br>ping_timeout: 60s
+                            </div>
+                        </div>
+
+                        <!-- DNS -->
+                        <div id="dns-option-group" class="glass-option rounded-xl p-4 disabled-option">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="font-semibold text-sm text-theme-main">DNS Personalizado</div>
+                                    <div class="text-xs text-theme-muted">Si no: Google + Cloudflare</div>
+                                </div>
+                                <input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled>
+                                <label for="dns-toggle" class="toggle-switch"></label>
+                            </div>
+                            <div id="dns-details" class="hidden mt-2">
+                                <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="google">Solo Google (8.8.8.8)</option>
+                                    <option value="cloudflare">Solo Cloudflare (1.1.1.1)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Fingerprint -->
+                        <div id="client-fingerprint-option-group" class="glass-option rounded-xl p-4 disabled-option">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="font-semibold text-sm text-theme-main">uTLS Fingerprint</div>
+                                    <div class="text-xs text-theme-muted">Camuflaje TLS</div>
+                                </div>
+                                <input type="checkbox" id="client-fingerprint-toggle" class="toggle-checkbox" disabled>
+                                <label for="client-fingerprint-toggle" class="toggle-switch"></label>
+                            </div>
+                            <div id="client-fingerprint-details" class="hidden mt-2">
+                                <select id="client-fingerprint-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="chrome" selected>Chrome</option>
+                                    <option value="randomized">Aleatorio</option>
+                                    <option value="ios">iOS</option>
+                                    <option value="android">Android</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ALPN -->
+                        <div id="alpn-option-group" class="glass-option rounded-xl p-4 disabled-option">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <div class="font-semibold text-sm text-theme-main">Forzar ALPN</div>
+                                    <div class="text-xs text-theme-muted">Negociación</div>
+                                </div>
+                                <input type="checkbox" id="alpn-toggle" class="toggle-checkbox" disabled>
+                                <label for="alpn-toggle" class="toggle-switch"></label>
+                            </div>
+                            <div id="alpn-details" class="hidden mt-2">
+                                <select id="alpn-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="h2" selected>h2</option>
+                                    <option value="h2,http/1.1">h2, http/1.1</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Output & Actions -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                
+                <!-- Action Buttons -->
+                <div class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-6 z-10">
+                    <button id="generate-btn" class="w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center gap-2 group transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
+                        <i class="fa-solid fa-bolt group-hover:animate-pulse"></i> GENERAR CONFIG
+                    </button>
+                    <button id="copy-btn" class="w-full py-3 rounded-xl font-semibold text-theme-main bg-gray-500/20 hover:bg-gray-500/30 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i id="copy-icon" class="fa-solid fa-copy"></i> <span id="copy-text">Copiar JSON</span>
+                    </button>
+                </div>
+
+                <!-- Output Area (Terminal Style) -->
+                <div class="glass-card rounded-2xl overflow-hidden flex-1 flex flex-col min-h-[500px]">
+                    <div class="terminal-header px-4 py-2 flex justify-between items-center">
+                        <span class="text-xs text-theme-muted font-mono">config.json</span>
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 terminal-body">
+                        <pre class="absolute inset-0 overflow-auto p-4 scrollbar-thin"><code id="output-config" class="text-xs md:text-sm font-mono whitespace-pre-wrap break-all code-content"></code></pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- THEME LOGIC ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            themeIcon.className = isLight ? 'fas fa-sun text-xl text-orange-500' : 'fas fa-moon text-xl text-yellow-300';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        });
+
+        // --- GENERATOR LOGIC ---
+        const generateBtn = document.getElementById('generate-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const proxyLinksInput = document.getElementById('proxy-links');
+        const outputConfig = document.getElementById('output-config');
+        const statusContainer = document.getElementById('status-container');
+        const copyText = document.getElementById('copy-text');
+        const copyIcon = document.getElementById('copy-icon');
+
+        const tunBtn = document.getElementById('tun-btn');
+        const tproxyBtn = document.getElementById('tproxy-btn');
+        const modeStatusText = document.getElementById('mode-status-text');
+        let selectedMode = 'tun';
+
+        const alpnOptionGroup = document.getElementById('alpn-option-group');
+        const alpnToggle = document.getElementById('alpn-toggle');
+        const alpnDetails = document.getElementById('alpn-details');
+        const alpnSelect = document.getElementById('alpn-select');
+
+        const clientFingerprintOptionGroup = document.getElementById('client-fingerprint-option-group');
+        const clientFingerprintToggle = document.getElementById('client-fingerprint-toggle');
+        const clientFingerprintDetails = document.getElementById('client-fingerprint-details');
+        const clientFingerprintSelect = document.getElementById('client-fingerprint-select');
+        
+        const dnsOptionGroup = document.getElementById('dns-option-group');
+        const dnsToggle = document.getElementById('dns-toggle');
+        const dnsDetails = document.getElementById('dns-details');
+        const dnsSelect = document.getElementById('dns-select');
+
+        const keepAliveOptionGroup = document.getElementById('keep-alive-option-group');
+        const keepAliveToggle = document.getElementById('keep-alive-toggle');
+
+        let validProxies = [];
+        let validationTimeout;
+        const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        
+        window.selectMode = function(mode) {
+            selectedMode = mode;
+            if (mode === 'tun') {
+                tunBtn.classList.add('active');
+                tproxyBtn.classList.remove('active');
+                modeStatusText.textContent = 'TUN: 172.19.0.1/30 (Auto Route)';
+            } else {
+                tproxyBtn.classList.add('active');
+                tunBtn.classList.remove('active');
+                modeStatusText.textContent = 'TPROXY: TCP 9797 | UDP 9898';
+            }
+        };
+
+        function setupToggleLogic(toggle, details) {
+            if (!details) return;
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    details.classList.remove('hidden');
+                } else {
+                    details.classList.add('hidden');
+                }
+            });
+        }
+        setupToggleLogic(alpnToggle, alpnDetails);
+        setupToggleLogic(clientFingerprintToggle, clientFingerprintDetails);
+        setupToggleLogic(dnsToggle, dnsDetails); // Add logic for DNS Details visibility
+        
+        function enableGroup(group, toggle) {
+            group.classList.remove('disabled-option');
+            toggle.disabled = false;
+        }
+        function disableGroup(group, toggle, details) {
+            group.classList.add('disabled-option');
+            toggle.disabled = true;
+            toggle.checked = false;
+            if(details) details.classList.add('hidden');
+        }
+
+        // --- INTELLIGENT LOGIC ---
+        function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
+            if (hasLink) {
+                // DNS ALWAYS ENABLED (FIXED), but defaults to unchecked (Dual DNS)
+                enableGroup(dnsOptionGroup, dnsToggle);
+                // dnsToggle.checked = false; // Let it stay as is or default to false in HTML
+                
+                // Keep Alive: Enable if ANY gRPC detected
+                if (isGrpcAvailable) {
+                    enableGroup(keepAliveOptionGroup, keepAliveToggle);
+                    keepAliveToggle.checked = true;
+                } else {
+                    disableGroup(keepAliveOptionGroup, keepAliveToggle);
+                }
+
+            } else {
+                disableGroup(keepAliveOptionGroup, keepAliveToggle);
+                disableGroup(dnsOptionGroup, dnsToggle, dnsDetails);
+            }
+
+            if (isTlsAvailable) {
+                enableGroup(alpnOptionGroup, alpnToggle);
+                enableGroup(clientFingerprintOptionGroup, clientFingerprintToggle);
+            } else {
+                disableGroup(alpnOptionGroup, alpnToggle, alpnDetails);
+                disableGroup(clientFingerprintOptionGroup, clientFingerprintToggle, clientFingerprintDetails);
+            }
+        }
+        
+        proxyLinksInput.addEventListener('input', () => {
+            generateBtn.disabled = true;
+            copyBtn.disabled = true;
+            outputConfig.textContent = '';
+            clearTimeout(validationTimeout);
+            
+            const links = proxyLinksInput.value.trim().split('\n').filter(link => link.trim() !== '');
+            if (links.length === 0) {
+                statusContainer.classList.add('hidden');
+                validProxies = [];
+                toggleAdvancedOptionsState(false, false, false);
+                return;
+            }
+
+            statusContainer.classList.remove('hidden');
+            setStatus('⏳ Verificando enlace...', 'loading');
+            
+            validationTimeout = setTimeout(() => {
+                const results = links.map((link, index) => parseAndValidateLink(link, index));
+                const errors = results.filter(r => r.errors.length > 0);
+                
+                validProxies = results.filter(r => r.errors.length === 0).map(r => r.proxy);
+                
+                const isTlsAvailable = validProxies.some(p => p.tls);
+                const isGrpcAvailable = validProxies.some(p => p.network === 'grpc');
+                
+                toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, true);
+                
+                if (errors.length > 0) {
+                    const errorMessage = errors.map(e => e.errors.join(' ')).join(' | ');
+                    setStatus(`❌ ${errorMessage}`, 'error');
+                    generateBtn.disabled = true;
+                } else if (validProxies.length > 0) {
+                    setStatus('✅ Enlace válido. Listo para generar.', 'success');
+                    generateBtn.disabled = false;
+                } else {
+                    setStatus('❌ Formato no reconocido.', 'error');
+                    generateBtn.disabled = true;
+                }
+            }, 500);
+        });
+        
+        generateBtn.addEventListener('click', () => {
+            if (validProxies.length > 0) {
+                const jsonConfig = generateSingboxConfig(validProxies);
+                outputConfig.textContent = jsonConfig;
+                setStatus('🚀 ¡Configuración Generada!', 'success');
+                copyBtn.disabled = false;
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (outputConfig.textContent) {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = outputConfig.textContent;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    copyText.textContent = '¡Copiado!';
+                    copyIcon.className = 'fa-solid fa-check text-emerald-500';
+                    setTimeout(() => {
+                        copyText.textContent = 'Copiar JSON';
+                        copyIcon.className = 'fa-solid fa-copy';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Error al copiar: ', err);
+                    setStatus('❌ Error al copiar', 'error');
+                }
+            }
+        });
+
+        function setStatus(message, type) {
+            statusContainer.className = 'mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium transition-all duration-300 mb-6 text-sm';
+            
+            if (type === 'loading') {
+                statusContainer.classList.add('text-theme-muted', 'verificando');
+                statusContainer.style.borderColor = 'rgba(255,255,255,0.1)';
+            } else if (type === 'error') {
+                statusContainer.classList.add('text-red-400', 'bg-red-500/10');
+                statusContainer.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            } else if (type === 'success') {
+                statusContainer.classList.add('text-emerald-400', 'bg-emerald-500/10');
+                statusContainer.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            }
+            statusContainer.innerHTML = message;
+        }
+
+        // --- PARSING LOGIC ---
+        function parseAndValidateLink(link, index) {
+            const result = { proxy: null, errors: [], warnings: [] };
+            try {
+                let p;
+                if (link.startsWith('vless://')) p = parseVless(link, index, result);
+                else if (link.startsWith('vmess://')) p = parseVmess(link, index, result);
+                else if (link.startsWith('trojan://')) p = parseTrojan(link, index, result);
+                else {
+                    result.errors.push(`Protocolo no soportado.`);
+                    return result;
+                }
+                
+                if (!p.server) result.errors.push(`Falta servidor.`);
+                if (!p.port || isNaN(p.port)) result.errors.push(`Puerto inválido.`);
+                if ((p.type === 'vless' || p.type === 'vmess') && (!p.uuid || !UUID_REGEX.test(p.uuid))) {
+                    result.errors.push(`UUID inválido.`);
+                }
+                result.proxy = p;
+            } catch (e) {
+                result.errors.push(`Error: ${e.message}`);
+            }
+            return result;
+        }
+
+        function parseVless(link, index, result) {
+            const url = new URL(link);
+            const params = new URLSearchParams(url.search);
+            const proxy = {
+                type: 'vless',
+                server: url.hostname,
+                port: parseInt(url.port, 10),
+                uuid: String(url.username || '').trim(),
+                network: params.get('type') || 'tcp',
+                name: decodeURIComponent(url.hash.substring(1)) || `VLESS_${index}`
+            };
+
+            const security = params.get('security');
+            proxy.tls = (security === 'tls' || security === 'reality' || security === 'xtls');
+            proxy.servername = params.get('sni') || params.get('servername') || proxy.server;
+            
+            if (security === 'reality') {
+                proxy.security = 'reality';
+                proxy.fp = params.get('fp');
+                proxy.pbk = params.get('pbk');
+                proxy.spx = params.get('spx');
+            }
+
+            if (proxy.network === 'grpc') {
+                proxy['grpc-opts'] = { 'grpc-service-name': params.get('serviceName') || '' };
+            } else if (proxy.network === 'ws') {
+                proxy['ws-opts'] = {
+                    path: params.get('path') || '/',
+                    headers: { Host: params.get('host') || proxy.servername }
+                };
+            }
+            return proxy;
+        }
+
+        function parseVmess(link, index, result) {
+            let decoded;
+            try { decoded = JSON.parse(atob(link.substring(8))); } 
+            catch (e) { result.errors.push('Base64 inválido.'); return {}; }
+            
+            const proxy = {
+                type: 'vmess',
+                server: decoded.add,
+                port: parseInt(decoded.port, 10),
+                uuid: decoded.id,
+                alterId: parseInt(decoded.aid || 0),
+                cipher: decoded.scy || 'auto',
+                network: decoded.net || 'tcp',
+                name: decoded.ps || `VMess_${index}`
+            };
+
+            proxy.tls = (decoded.tls === 'tls');
+            proxy.servername = decoded.sni || proxy.server;
+
+            if (proxy.network === 'grpc') {
+                proxy['grpc-opts'] = { 'grpc-service-name': decoded.path || decoded.serviceName || '' }; 
+            } else if (proxy.network === 'ws') {
+                proxy['ws-opts'] = {
+                    path: decoded.path || '/',
+                    headers: { Host: decoded.host || proxy.servername }
+                };
+            }
+            return proxy;
+        }
+
+        function parseTrojan(link, index, result) {
+            const url = new URL(link);
+            const params = new URLSearchParams(url.search);
+            const proxy = {
+                type: 'trojan',
+                server: url.hostname,
+                port: parseInt(url.port, 10),
+                password: decodeURIComponent(url.username),
+                network: params.get('type') || 'tcp',
+                name: decodeURIComponent(url.hash.substring(1)) || `Trojan_${index}`
+            };
+            
+            proxy.tls = (params.get('security') === 'tls' || params.get('security') === 'reality' || url.port == 443);
+            proxy.servername = params.get('sni') || proxy.server;
+
+            if (proxy.network === 'grpc') {
+                proxy['grpc-opts'] = { 'grpc-service-name': params.get('serviceName') || '' };
+            } else if (proxy.network === 'ws') {
+                proxy['ws-opts'] = {
+                    path: params.get('path') || '/',
+                    headers: { Host: params.get('host') || proxy.servername }
+                };
+            }
+            return proxy;
+        }
+
+        function generateSingboxConfig(proxies) {
+            
+            // 1. DNS CONFIGURATION LOGIC (EXCLUSIVE VS DUAL)
+            const isDnsCustomEnabled = dnsToggle.checked;
+            const selectedDns = dnsSelect.value;
+            
+            // Define servers objects
+            const googleDns = { "tag": "google", "address": "8.8.8.8", "detour": "proxy" };
+            const cloudflareDns = { "tag": "cloudflare", "address": "1.1.1.1", "detour": "proxy" };
+            
+            const dnsServers = [];
+            
+            if (isDnsCustomEnabled) {
+                // EXCLUSIVE MODE: Only inject the selected one
+                if (selectedDns === 'google') {
+                    dnsServers.push(googleDns);
+                } else {
+                    dnsServers.push(cloudflareDns);
+                }
+            } else {
+                // DUAL MODE (DEFAULT): Inject BOTH for redundancy
+                dnsServers.push(googleDns, cloudflareDns);
+            }
+
+            // Add local and fakeip (always needed)
+            dnsServers.push(
+                { "tag": "local", "address": "local", "detour": "direct" },
+                { "tag": "fakeip", "address": "fakeip" }
+            );
+
+            const config = {
+                "log": { "level": "error", "timestamp": true }, 
+                "dns": { 
+                    "servers": dnsServers,
+                    "rules": [
+                        { "outbound": "any", "server": "local" },
+                        { "geosite": "private", "server": "local" }, // LAN Protection
+                        { "query_type": ["A", "AAAA"], "server": "fakeip" }
+                    ],
+                    "fakeip": {
+                        "enabled": true,
+                        "inet4_range": "198.18.0.0/15"
+                    },
+                    "strategy": "ipv4_only" 
+                },
+                "inbounds": [],
+                "outbounds": [],
+                "route": {
+                    "rules": [
+                        { "protocol": "dns", "outbound": "dns-out" },
+                        { "ip_is_private": true, "outbound": "direct" }
+                    ],
+                    "final": "proxy",
+                    "auto_detect_interface": true
+                }
+            };
+
+            if (selectedMode === 'tun') {
+                config.inbounds.push({
+                    "type": "tun",
+                    "tag": "tun-in",
+                    "interface_name": "tun0",
+                    "inet4_address": "172.19.0.1/30",
+                    "mtu": 1400,
+                    "auto_route": true,
+                    "strict_route": true,
+                    "stack": "system",
+                    "sniff": true
+                });
+            } else {
+                config.inbounds.push(
+                    {
+                        "type": "tproxy",
+                        "tag": "tproxy-in",
+                        "listen": "::",
+                        "listen_port": 9898,
+                        "sniff": true,
+                        "sniff_override_destination": true
+                    },
+                    {
+                        "type": "redirect",
+                        "tag": "redirect-in",
+                        "listen": "::",
+                        "listen_port": 9797,
+                        "sniff": true,
+                        "sniff_override_destination": true
+                    }
+                );
+            }
+
+            const p = proxies[0]; 
+            
+            const outbound = {
+                "type": p.type,
+                "tag": "proxy",
+                "server": p.server,
+                "server_port": p.port
+            };
+
+            if (p.type === 'vless') {
+                outbound.uuid = p.uuid;
+                outbound.packet_encoding = "xudp"; 
+            } else if (p.type === 'vmess') {
+                outbound.uuid = p.uuid;
+                outbound.alter_id = p.alterId;
+                outbound.security = p.cipher;
+            } else if (p.type === 'trojan') {
+                outbound.password = p.password;
+            }
+
+            if (p.network === 'grpc') {
+                outbound.transport = {
+                    "type": "grpc",
+                    "service_name": p['grpc-opts']?.['grpc-service-name'] || "gun"
+                };
+                if (keepAliveToggle.checked) {
+                    outbound.transport.idle_timeout = "2h";
+                    outbound.transport.ping_timeout = "60s";
+                    outbound.transport.permit_without_stream = true;
+                }
+            } else if (p.network === 'ws') {
+                outbound.transport = {
+                    "type": "ws",
+                    "path": p['ws-opts']?.path || "/",
+                    "headers": p['ws-opts']?.headers || {}
+                };
+            }
+
+            if (p.tls) {
+                outbound.tls = {
+                    "enabled": true,
+                    "server_name": p.servername,
+                    "insecure": (p['skip-cert-verify'] === true)
+                };
+                
+                if (clientFingerprintToggle.checked) {
+                    outbound.tls.utls = {
+                        "enabled": true,
+                        "fingerprint": clientFingerprintSelect.value
+                    };
+                }
+
+                if (alpnToggle.checked) {
+                    outbound.tls.alpn = alpnSelect.value.split(',').map(s => s.trim());
+                }
+
+                if (p.security === 'reality') {
+                    outbound.tls.reality = {
+                        "enabled": true,
+                        "public_key": p.pbk,
+                        "short_id": p.spx || ""
+                    };
+                    outbound.tls.utls = {
+                        "enabled": true,
+                        "fingerprint": p.fp || "chrome"
+                    };
+                }
+            }
+
+            config.outbounds.push(outbound);
+            config.outbounds.push(
+                { "type": "direct", "tag": "direct" },
+                { "type": "dns", "tag": "dns-out" },
+                { "type": "block", "tag": "block" }
+            );
+
+            return JSON.stringify(config, null, 2);
+        }
+    });
+    </script>
+</body>
+</html>
