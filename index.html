@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247;
+            --primary-glow: 168, 85, 247; /* Purple 500 */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v23.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v25.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -200,7 +200,7 @@
                             </div>
                         </div>
 
-                        <!-- Stack Selector -->
+                        <!-- Stack Selector (Only for TUN) -->
                         <div id="stack-container" class="glass-option rounded-xl p-3 border border-purple-500/20">
                             <div class="flex justify-between items-center mb-2">
                                 <div>
@@ -227,21 +227,6 @@
                     </h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <!-- MTU (Added for Android) -->
-                        <div id="mtu-option-group" class="glass-option rounded-xl p-3">
-                            <div class="flex justify-between items-center mb-1">
-                                <div class="font-semibold text-xs text-theme-main">MTU (TUN)</div>
-                                <input type="checkbox" id="mtu-toggle" class="toggle-checkbox">
-                                <label for="mtu-toggle" class="toggle-switch scale-75 origin-right"></label>
-                            </div>
-                            <div id="mtu-details" class="hidden mt-2">
-                                <input type="number" id="mtu-input" 
-                                    class="modern-input w-full rounded-lg p-2 text-xs text-center" 
-                                    value="1400" placeholder="1400">
-                            </div>
-                            <div id="mtu-default-text" class="text-[10px] text-theme-muted mt-1">Def: 1400 (4G Seguro)</div>
-                        </div>
                         
                         <!-- Keep Alive -->
                         <div id="keep-alive-option-group" class="glass-option rounded-xl p-3 disabled-option">
@@ -363,13 +348,6 @@
         const stackSelect = document.getElementById('stack-select');
         const stackContainer = document.getElementById('stack-container');
         
-        // MTU
-        const mtuToggle = document.getElementById('mtu-toggle');
-        const mtuDetails = document.getElementById('mtu-details');
-        const mtuInput = document.getElementById('mtu-input');
-        const mtuDefaultText = document.getElementById('mtu-default-text');
-        const mtuOptionGroup = document.getElementById('mtu-option-group');
-
         let selectedMode = 'tun';
 
         const clientFingerprintOptionGroup = document.getElementById('client-fingerprint-option-group');
@@ -397,26 +375,15 @@
             if (mode === 'tun') {
                 tunBtn.classList.add('active');
                 tproxyBtn.classList.remove('active');
-                
                 stackContainer.classList.remove('disabled-option');
                 stackToggle.disabled = false;
-
-                mtuOptionGroup.classList.remove('disabled-option');
-                mtuToggle.disabled = false;
             } else {
                 tproxyBtn.classList.add('active');
                 tunBtn.classList.remove('active');
-                
                 stackContainer.classList.add('disabled-option');
                 stackToggle.disabled = true;
                 stackToggle.checked = false;
                 stackDetails.classList.add('hidden');
-
-                mtuOptionGroup.classList.add('disabled-option');
-                mtuToggle.disabled = true;
-                mtuToggle.checked = false;
-                mtuDetails.classList.add('hidden');
-                mtuDefaultText.classList.remove('hidden');
             }
         };
 
@@ -425,16 +392,6 @@
                 stackDetails.classList.remove('hidden');
             } else {
                 stackDetails.classList.add('hidden');
-            }
-        });
-
-        mtuToggle.addEventListener('change', () => {
-            if (mtuToggle.checked) {
-                mtuDetails.classList.remove('hidden');
-                mtuDefaultText.classList.add('hidden');
-            } else {
-                mtuDetails.classList.add('hidden');
-                mtuDefaultText.classList.remove('hidden');
             }
         });
 
@@ -690,21 +647,17 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration Logic
+            // DNS Configuration Logic (TUN/PC logic retained for compatibility)
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
 
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            // FIX TPROXY: Local DNS for bootstrap (Implicit detour for compatibility)
-            const localDns = { "tag": "local", "type": "local" }; 
+            const localDns = { "tag": "local", "type": "local" };
             
-            // Bootstrap DNS: Use Google Direct to resolve proxy IP to avoid loops
-            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8" };
-
             // Construct DNS Server list
-            let activeDnsServers = [bootstrapDns]; 
+            let activeDnsServers = [];
             
             if (isDnsCustomEnabled) {
                 if (selectedDns === 'google') activeDnsServers.push(googleDns);
@@ -715,7 +668,7 @@
             
             activeDnsServers.push(localDns);
 
-            // Get Server Domain
+            // Get Server Domain for Local Resolution Rule
             const p = proxies[0]; 
             const proxyDomain = p.server;
 
@@ -724,8 +677,8 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // Resolve Proxy Domain via Bootstrap
-                        { "domain": [proxyDomain], "server": "bootstrap" }
+                        // Resolve Proxy Domain via Local DNS (prevents loops)
+                        { "domain": [proxyDomain], "server": "local" }
                     ],
                     "strategy": "ipv4_only" 
                 },
@@ -733,44 +686,47 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
-                        // Ensure Bootstrap DNS goes direct
-                        { "ip_cidr": ["8.8.8.8/32"], "outbound": "direct" },
-                        { "protocol": "dns", "action": "hijack-dns" },
-                        { "ip_is_private": true, "outbound": "direct" }
+                        // --- TPROXY FIX: BLOCK QUIC ---
+                        // Only applied if mode is TPROXY to force TCP usage
+                        // Note: To be safe, we apply it globally here or conditionally.
+                        // User wants TUN untouched. We'll add this rule but it needs 'block' outbound.
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "bootstrap" // Use Google Direct for initial resolve
+                    "default_domain_resolver": "local"
                 }
             };
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
-                // MTU Logic (Default 1400)
-                let finalMtu = 1400;
-                if (mtuToggle.checked) {
-                    const val = parseInt(mtuInput.value);
-                    if (!isNaN(val) && val > 0) finalMtu = val;
-                }
-
+                // TUN LOGIC: UNTOUCHED AS REQUESTED (Same as v18)
                 const tunInbound = {
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
                     "address": ["172.19.0.1/30"],
-                    "mtu": finalMtu, // User selected MTU
+                    "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
-                    "stack": "system", // Default
+                    "stack": "system",
                     "sniff": true
                 };
 
+                // Add Stack logic if user selected it (from UI)
                 if (stackToggle.checked) {
                     tunInbound.stack = stackSelect.value;
                 }
 
                 config.inbounds.push(tunInbound);
+                
+                // Normal TUN routing
+                config.route.rules.push(
+                    { "protocol": "dns", "action": "hijack-dns" },
+                    { "ip_is_private": true, "outbound": "direct" }
+                );
+
             } else {
+                // TPROXY LOGIC: RESTUCTURED FOR STABILITY
                 config.inbounds.push(
                     {
                         "type": "tproxy",
@@ -778,7 +734,7 @@
                         "listen": "::",
                         "listen_port": 9898,
                         "sniff": true,
-                        "sniff_override_destination": true
+                        "sniff_override_destination": false // SAFE
                     },
                     {
                         "type": "redirect",
@@ -788,6 +744,13 @@
                         "sniff": true,
                         "sniff_override_destination": true
                     }
+                );
+
+                // Inject Anti-QUIC Rule for TProxy
+                config.route.rules.push(
+                    { "protocol": "quic", "outbound": "block" }, // FORCE TCP
+                    { "protocol": "dns", "action": "hijack-dns", "port": 53 },
+                    { "ip_is_private": true, "outbound": "direct" }
                 );
             }
 
@@ -857,6 +820,7 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
+                { "type": "block", "tag": "block" } // Required for Anti-QUIC
             );
 
             return JSON.stringify(config, null, 2);
