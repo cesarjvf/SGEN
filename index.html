@@ -571,14 +571,16 @@
             let config = {};
 
             if (selectedMode === 'tun') {
-                // --- TUN LOGIC (Fix: inet4_address -> address) ---
+                // --- TUN LOGIC ---
                 const bootstrapIp = (bootstrapSelect.value === 'google') ? '8.8.8.8' : '1.1.1.1';
                 const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
                 const finalStack = stackToggle.checked ? stackSelect.value : "system";
                 
-                // DNS Server construction based on Toggle
+                // DNS: FIX "empty direct outbound" error
+                // We remove "detour": "direct" from bootstrap and local servers.
+                // We force their IPs to "direct" via Route Rules.
                 let tunDnsServers = [
-                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp, "detour": "direct" }
+                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp } // REMOVED detour: direct
                 ];
                 let tunFinal = "google";
 
@@ -598,7 +600,7 @@
                     tunFinal = "google"; // Default fallback
                 }
 
-                tunDnsServers.push({ "tag": "local", "type": "local", "detour": "direct" });
+                tunDnsServers.push({ "tag": "local", "type": "local" }); // REMOVED detour: direct
 
                 config = {
                     "log": { "level": "error", "timestamp": true },
@@ -619,6 +621,8 @@
                     "outbounds": [outbound, { "type": "direct", "tag": "direct" }],
                     "route": {
                         "rules": [
+                            // FIX: Force Bootstrap DNS IP to use direct outbound explicitly via route rule
+                            { "ip_cidr": [bootstrapIp + "/32"], "outbound": "direct" },
                             { "protocol": "dns", "action": "hijack-dns" },
                             { "ip_is_private": true, "outbound": "direct" }
                         ],
@@ -635,14 +639,12 @@
 
                 let remoteServers = [];
                 if (dnsToggle.checked) {
-                    // Toggle ON: ONLY selected
                     if (dnsSelect.value === 'google') {
                          remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
                     } else {
                          remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
                     }
                 } else {
-                    // Toggle OFF: BOTH
                     remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
                     remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
                 }
@@ -665,6 +667,8 @@
                         "rules": [
                             { "action": "sniff" },
                             { "type": "logical", "mode": "or", "rules": [{ "port": 53 }, { "protocol": "dns" }], "action": "hijack-dns" },
+                            // Ensure direct DNS IP also goes direct
+                            { "ip_cidr": [directDnsIp + "/32"], "outbound": "direct" },
                             { "clash_mode": "direct", "outbound": "direct" },
                             { "clash_mode": "global", "outbound": "proxy" },
                             { "ip_is_private": true, "outbound": "direct" }
