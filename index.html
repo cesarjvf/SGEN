@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v14.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v15.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -642,29 +642,30 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration Logic
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
 
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            // FIX: Removed "detour": "direct" to prevent FATAL error "makes no sense"
+            // FIX: Removed detour from local DNS to prevent "makes no sense" FATAL error on Android
             const localDns = { "tag": "local", "type": "local" }; 
+            const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
+            
+            // Bootstrap DNS: Use Google Direct to resolve proxy IP to avoid loops
+            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" };
 
             // Construct DNS Server list
-            let activeDnsServers = [];
+            let activeDnsServers = [bootstrapDns]; 
             
             if (isDnsCustomEnabled) {
-                // ON: Exclusive choice
                 if (selectedDns === 'google') activeDnsServers.push(googleDns);
                 else if (selectedDns === 'cloudflare') activeDnsServers.push(cloudflareDns);
             } else {
-                // OFF: Dual (Both)
                 activeDnsServers.push(googleDns, cloudflareDns);
             }
             
-            activeDnsServers.push(localDns);
+            activeDnsServers.push(localDns, fakeipDns);
 
             // Get Server Domain
             const p = proxies[0]; 
@@ -675,9 +676,10 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // FIX: Use LOCAL DNS to resolve the proxy domain via Direct/System
-                        // This prevents the loop/closed pipe error when connecting to the VPS
-                        { "domain": [proxyDomain], "server": "local" }
+                        // Resolve Proxy Domain via Bootstrap (Direct)
+                        { "domain": [proxyDomain], "server": "bootstrap" },
+                        // FakeIP for everything else
+                        { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
                     "strategy": "ipv4_only" 
                 },
@@ -690,7 +692,7 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "local" // CRITICAL FIX: Bootstrap DNS resolution
+                    "default_domain_resolver": "bootstrap" // FIX: Use Bootstrap resolver
                 }
             };
 
