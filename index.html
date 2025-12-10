@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247; /* Purple 500 */
+            --primary-glow: 168, 85, 247;
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -159,7 +159,6 @@
 
     <div class="w-full max-w-5xl space-y-6">
         
-        <!-- Header Mobile Friendly -->
         <div class="text-center space-y-1 mt-4">
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
@@ -171,10 +170,8 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Left Column -->
             <div class="lg:col-span-7 space-y-5">
                 
-                <!-- Input Area -->
                 <div class="glass-card rounded-2xl p-5 space-y-3">
                     <div class="flex justify-between items-center">
                         <label class="text-theme-main font-semibold flex items-center gap-2 text-sm">
@@ -187,13 +184,11 @@
                         placeholder="Pegar enlace vless://..."></textarea>
                 </div>
 
-                <!-- Magisk & Stack Config -->
                 <div class="glass-card rounded-2xl p-5">
                     <h3 class="text-theme-main font-semibold mb-4 flex items-center gap-2 text-sm">
                         <i class="fa-brands fa-android text-pink-500"></i> Configuración Magisk
                     </h3>
                     <div class="grid grid-cols-1 gap-4">
-                        <!-- Mode Selector -->
                         <div class="grid grid-cols-2 gap-3">
                             <div id="tun-btn" class="mode-card glass-option rounded-xl p-3 text-center active flex flex-col justify-center items-center" onclick="selectMode('tun')">
                                 <i class="fa-solid fa-shield-halved text-xl mb-1 text-theme-muted"></i>
@@ -205,7 +200,6 @@
                             </div>
                         </div>
 
-                        <!-- Stack Selector with Toggle (New Request) -->
                         <div id="stack-container" class="glass-option rounded-xl p-3 border border-purple-500/20">
                             <div class="flex justify-between items-center mb-2">
                                 <div>
@@ -226,7 +220,6 @@
                     </div>
                 </div>
 
-                <!-- Advanced Options -->
                 <div class="glass-card rounded-2xl p-5">
                     <h3 class="text-theme-main font-semibold mb-4 flex items-center gap-2 text-sm">
                         <i class="fa-solid fa-sliders text-purple-500"></i> Ajustes Avanzados
@@ -234,7 +227,6 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         
-                        <!-- Keep Alive -->
                         <div id="keep-alive-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Keep Alive</div>
@@ -244,7 +236,6 @@
                             <div class="text-[10px] text-theme-muted">gRPC Optimizado</div>
                         </div>
 
-                        <!-- Insecure -->
                         <div id="insecure-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Insecure TLS</div>
@@ -254,14 +245,12 @@
                             <div class="text-[10px] text-yellow-500/80">Skip Verify (SNI)</div>
                         </div>
 
-                        <!-- DNS -->
                         <div id="dns-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">DNS Seguro</div>
                                 <input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled>
                                 <label for="dns-toggle" class="toggle-switch scale-75 origin-right"></label>
                             </div>
-                            <!-- Dropdown only shows when toggle ON -->
                             <div id="dns-details" class="hidden mt-2">
                                 <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
                                     <option value="google">Solo Google</option>
@@ -271,7 +260,6 @@
                             <div class="text-[10px] text-theme-muted mt-1">OFF: Google + Cloudflare</div>
                         </div>
 
-                        <!-- Fingerprint -->
                         <div id="client-fingerprint-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">uTLS</div>
@@ -292,10 +280,8 @@
                 </div>
             </div>
 
-            <!-- Right Column (Output) -->
             <div class="lg:col-span-5 flex flex-col gap-4">
                 
-                <!-- Action Buttons (Sticky for Mobile) -->
                 <div class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-4 z-20 shadow-xl">
                     <button id="generate-btn" class="w-full py-3 rounded-xl font-bold text-white text-base flex items-center justify-center gap-2 group transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30 hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
                         <i class="fa-solid fa-bolt group-hover:animate-pulse"></i> GENERAR JSON
@@ -352,7 +338,6 @@
         const tunBtn = document.getElementById('tun-btn');
         const tproxyBtn = document.getElementById('tproxy-btn');
         
-        // Stack Logic
         const stackToggle = document.getElementById('stack-toggle');
         const stackDetails = document.getElementById('stack-details');
         const stackSelect = document.getElementById('stack-select');
@@ -380,21 +365,16 @@
         let validationTimeout;
         const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         
-        // Mode Selection
         window.selectMode = function(mode) {
             selectedMode = mode;
             if (mode === 'tun') {
                 tunBtn.classList.add('active');
                 tproxyBtn.classList.remove('active');
-                
-                // Enable Stack UI
                 stackContainer.classList.remove('disabled-option');
                 stackToggle.disabled = false;
             } else {
                 tproxyBtn.classList.add('active');
                 tunBtn.classList.remove('active');
-                
-                // Disable Stack UI (TProxy doesn't use standard Tun stack options in this context)
                 stackContainer.classList.add('disabled-option');
                 stackToggle.disabled = true;
                 stackToggle.checked = false;
@@ -402,7 +382,6 @@
             }
         };
 
-        // Stack Toggle Logic
         stackToggle.addEventListener('change', () => {
             if (stackToggle.checked) {
                 stackDetails.classList.remove('hidden');
@@ -718,7 +697,7 @@
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
-                    "address": ["172.19.0.1/30"],
+                    "address": ["172.19.0.1/30"], // FIXED: Array address
                     "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
@@ -821,8 +800,7 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
-                { "type": "dns", "tag": "dns-out" },
-                { "type": "block", "tag": "block" }
+                // Clean output - no unused blocks
             );
 
             return JSON.stringify(config, null, 2);
