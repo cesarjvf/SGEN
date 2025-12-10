@@ -568,13 +568,29 @@
                 if(fingerprintToggle.checked) outbound.tls.utls = { "enabled": true, "fingerprint": fingerprintSelect.value };
             }
 
+            // Common Experimental Config (from your example)
+            const experimental = {
+                "cache_file": {
+                    "enabled": true,
+                    "path": "sing_box.db",
+                    "store_fakeip": false
+                },
+                "clash_api": {
+                    "external_controller": "0.0.0.0:9090",
+                    "external_ui": "dashboard",
+                    "external_ui_download_url": "https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip",
+                    "external_ui_download_detour": "proxy",
+                    "default_mode": "rule"
+                }
+            };
+
             let config = {};
 
             if (selectedMode === 'tun') {
-                // --- TUN LOGIC (v18 + MTU/Stack) ---
+                // --- TUN LOGIC (Fix: inet4_address -> address) ---
                 const bootstrapIp = (bootstrapSelect.value === 'google') ? '8.8.8.8' : '1.1.1.1';
                 const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
-                const finalStack = stackToggle.checked ? stackSelect.value : "system"; // Logic update
+                const finalStack = stackToggle.checked ? stackSelect.value : "system";
                 
                 config = {
                     "log": { "level": "error", "timestamp": true },
@@ -591,7 +607,7 @@
                     },
                     "inbounds": [{
                         "type": "tun", "tag": "tun-in", "interface_name": "tun0",
-                        "inet4_address": ["172.19.0.1/30"],
+                        "address": ["172.19.0.1/30"], // FIXED HERE
                         "mtu": finalMtu,
                         "auto_route": true, "strict_route": true,
                         "stack": finalStack, 
@@ -606,15 +622,16 @@
                         "final": "proxy",
                         "auto_detect_interface": true,
                         "default_domain_resolver": "bootstrap"
-                    }
+                    },
+                    "experimental": experimental
                 };
                 if (dnsToggle.checked) config.dns.final = dnsSelect.value;
 
             } else {
                 // --- TPROXY LOGIC ---
-                const directDnsIp = tproxyDnsSelect.value; // New TPROXY Option
+                const directDnsIp = tproxyDnsSelect.value;
                 const remoteDns = { "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" };
-                const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp }; // Updated
+                const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp };
 
                 let remoteServers = [];
                 if (dnsToggle.checked) {
@@ -651,7 +668,8 @@
                         "find_process": false,
                         "auto_detect_interface": true,
                         "default_domain_resolver": { "server": "direct-dns" }
-                    }
+                    },
+                    "experimental": experimental
                 };
             }
 
