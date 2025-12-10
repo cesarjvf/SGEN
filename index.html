@@ -671,12 +671,9 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
+                        // FIX: Remove fakeip block from root, define as server only. Rule points to it.
                         { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
-                    "fakeip": {
-                        "enabled": true,
-                        "inet4_range": "198.18.0.0/15"
-                    },
                     "strategy": "ipv4_only" 
                 },
                 "inbounds": [],
@@ -687,7 +684,8 @@
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
                     "final": "proxy",
-                    "auto_detect_interface": true
+                    "auto_detect_interface": true,
+                    "default_domain_resolver": "local" // FIX: Route resolve
                 }
             };
 
@@ -799,8 +797,7 @@
 
             config.outbounds.push(outbound);
             config.outbounds.push(
-                { "type": "direct", "tag": "direct" },
-                // Clean output - no unused blocks
+                { "type": "direct", "tag": "direct" }
             );
 
             return JSON.stringify(config, null, 2);
