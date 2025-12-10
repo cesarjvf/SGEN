@@ -220,6 +220,15 @@
                     <!-- TUN Specific Options (Stack & MTU) -->
                     <div id="tun-options-container" class="grid grid-cols-1 gap-3 pt-3 border-t border-gray-500/20">
                         
+                        <!-- Gaming Mode -->
+                        <div id="gaming-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-gamepad text-pink-400"></i> Gaming Mode</span>
+                                <label><input type="checkbox" id="gaming-toggle" class="toggle-checkbox"><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">NAT Full + UDP Frag</div>
+                        </div>
+
                         <!-- Stack -->
                         <div class="glass-option p-3">
                             <div class="flex justify-between items-center mb-1">
@@ -315,22 +324,57 @@
                                 <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-shield text-green-400"></i> DNS Seguro</span>
                                 <label><input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
                             </div>
-                            <div id="dns-details" class="hidden">
+                            <div id="dns-details" class="hidden space-y-2">
                                 <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
                                     <option value="google">Google</option>
                                     <option value="cloudflare">Cloudflare</option>
                                 </select>
+                                <!-- DNS Protocol Selector (New) -->
+                                <div class="flex items-center justify-between px-1">
+                                    <span class="text-[10px] text-gray-400">Protocolo:</span>
+                                    <select id="dns-protocol-select" class="modern-input w-24 rounded text-[10px] p-0.5 text-right">
+                                        <option value="udp">UDP</option>
+                                        <option value="doh">DoH (HTTPS)</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="text-[10px] text-gray-500 mt-1">OFF: Dual DNS</div>
                         </div>
 
-                        <!-- Fake IP (Nuevo) -->
+                        <!-- Fake IP -->
                         <div id="fakeip-option-group" class="glass-option p-3 disabled-option">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-ghost text-gray-400"></i> Fake IP</span>
                                 <label><input type="checkbox" id="fakeip-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
                             </div>
                             <div class="text-[10px] text-gray-500 mt-1">Boost Speed (198.18.x.x)</div>
+                        </div>
+
+                        <!-- TCP Fast Open -->
+                        <div id="tfo-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> TCP Fast Open</span>
+                                <label><input type="checkbox" id="tfo-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Menos Latencia (TFO)</div>
+                        </div>
+
+                        <!-- ECN (Nuevo) -->
+                        <div id="ecn-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-traffic-light text-red-400"></i> ECN</span>
+                                <label><input type="checkbox" id="ecn-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Congestion Control</div>
+                        </div>
+
+                        <!-- DNS Cache -->
+                        <div id="cache-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-database text-cyan-400"></i> DNS Cache</span>
+                                <label><input type="checkbox" id="cache-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Persistencia (cache.db)</div>
                         </div>
 
                         <!-- Fingerprint -->
@@ -407,6 +451,10 @@
         const mtuDetails = document.getElementById('mtu-details');
         const mtuDefaultText = document.getElementById('mtu-default-text');
 
+        // Gaming Mode Ref
+        const gamingToggle = document.getElementById('gaming-toggle');
+        const gamingGroup = document.getElementById('gaming-option-group');
+
         // TPROXY Options
         const tproxyOptionsContainer = document.getElementById('tproxy-options-container');
         const tproxyDnsSelect = document.getElementById('tproxy-dns-select');
@@ -422,10 +470,23 @@
         const dnsToggle = document.getElementById('dns-toggle');
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
+        const dnsProtocolSelect = document.getElementById('dns-protocol-select');
         
         // FAKE IP Ref
         const fakeIpToggle = document.getElementById('fakeip-toggle');
         const fakeIpGroup = document.getElementById('fakeip-option-group');
+
+        // TFO Ref
+        const tfoToggle = document.getElementById('tfo-toggle');
+        const tfoGroup = document.getElementById('tfo-option-group');
+
+        // ECN Ref
+        const ecnToggle = document.getElementById('ecn-toggle');
+        const ecnGroup = document.getElementById('ecn-option-group');
+
+        // DNS Cache Ref
+        const cacheToggle = document.getElementById('cache-toggle');
+        const cacheGroup = document.getElementById('cache-option-group');
 
         const fingerprintGroup = document.getElementById('client-fingerprint-option-group');
         const fingerprintToggle = document.getElementById('client-fingerprint-toggle');
@@ -496,16 +557,22 @@
                 if(mtuToggle.checked) mtuInput.disabled = !tunEnabled;
                 
                 toggleGroup(bootstrapGroup, hasLink); // Bootstrap on for TUN
-                // FakeIP option logic for TUN
                 toggleGroup(fakeIpGroup, hasLink); 
+                toggleGroup(gamingGroup, hasLink); 
+                toggleGroup(tfoGroup, hasLink);    
+                toggleGroup(cacheGroup, hasLink);  
+                toggleGroup(ecnGroup, hasLink);    // ECN in TUN
             } else {
                 tunOptionsContainer.classList.add('hidden');
                 tproxyOptionsContainer.classList.remove('hidden');
                 tproxyDnsSelect.disabled = !hasLink;
 
-                toggleGroup(bootstrapGroup, false); // Bootstrap off for TPROXY
-                // FakeIP option logic for TPROXY (Now enabled if hasLink)
+                toggleGroup(bootstrapGroup, false); 
                 toggleGroup(fakeIpGroup, hasLink); 
+                toggleGroup(gamingGroup, false); 
+                toggleGroup(tfoGroup, hasLink);    
+                toggleGroup(cacheGroup, hasLink);  
+                toggleGroup(ecnGroup, false); // ECN typically for TUN inbound in this context
             }
 
             // General Options
@@ -588,39 +655,61 @@
 
             let config = {};
 
+            // EXPERIMENTAL SECTION (Common)
+            let experimentalConfig = undefined;
+            if (cacheToggle.checked) {
+                experimentalConfig = {
+                    "cache_file": {
+                        "enabled": true,
+                        "path": "cache.db",
+                        "store_fakeip": fakeIpToggle.checked // Sync with FakeIP toggle
+                    }
+                };
+            }
+
             if (selectedMode === 'tun') {
                 // --- TUN LOGIC ---
                 const bootstrapIp = (bootstrapSelect.value === 'google') ? '8.8.8.8' : '1.1.1.1';
                 const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
-                const finalStack = stackToggle.checked ? stackSelect.value : "system";
                 
-                // DNS: FIX "empty direct outbound" error
-                // We remove "detour": "direct" from bootstrap and local servers.
-                // We force their IPs to "direct" via Route Rules.
+                // GAMING MODE LOGIC
+                let finalStack = stackToggle.checked ? stackSelect.value : "system";
+                let endpointNat = false;
+                let udpFrag = false;
+
+                if (gamingToggle.checked) {
+                    finalStack = "gvisor"; 
+                    endpointNat = true;
+                    udpFrag = true;
+                }
+
+                // DNS Setup Logic (UDP vs DoH)
+                const dnsProtocol = dnsProtocolSelect.value; // 'udp' or 'doh'
+                const dnsType = (dnsProtocol === 'doh') ? 'https' : 'udp';
+                const googleDns = (dnsProtocol === 'doh') ? 'https://dns.google/dns-query' : '8.8.8.8';
+                const cfDns = (dnsProtocol === 'doh') ? 'https://cloudflare-dns.com/dns-query' : '1.1.1.1';
+
                 let tunDnsServers = [
-                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp } // REMOVED detour: direct
+                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp } 
                 ];
                 let tunFinal = "google";
 
                 if (dnsToggle.checked) {
-                    // Secure Mode: ONLY the selected one
                     if (dnsSelect.value === 'google') {
-                        tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
+                        tunDnsServers.push({ "tag": "google", "type": dnsType, "server": googleDns, "detour": "proxy" });
                         tunFinal = "google";
                     } else {
-                        tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
+                        tunDnsServers.push({ "tag": "cloudflare", "type": dnsType, "server": cfDns, "detour": "proxy" });
                         tunFinal = "cloudflare";
                     }
                 } else {
-                    // Default Mode: BOTH
-                    tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
-                    tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
-                    tunFinal = "google"; // Default fallback
+                    tunDnsServers.push({ "tag": "google", "type": dnsType, "server": googleDns, "detour": "proxy" });
+                    tunDnsServers.push({ "tag": "cloudflare", "type": dnsType, "server": cfDns, "detour": "proxy" });
+                    tunFinal = "google"; 
                 }
 
-                tunDnsServers.push({ "tag": "local", "type": "local" }); // REMOVED detour: direct
+                tunDnsServers.push({ "tag": "local", "type": "local" }); 
 
-                // FAKE IP LOGIC
                 let dnsSection = {
                     "servers": tunDnsServers,
                     "rules": [ { "domain": [p.server], "server": "bootstrap" } ],
@@ -635,21 +724,27 @@
                     };
                 }
 
+                // TUN Inbound Construction
+                const tunInbound = {
+                    "type": "tun", "tag": "tun-in", "interface_name": "tun0",
+                    "address": ["172.19.0.1/30"], 
+                    "mtu": finalMtu,
+                    "auto_route": true, "strict_route": true,
+                    "stack": finalStack, 
+                };
+
+                if (endpointNat) tunInbound.endpoint_independent_nat = true;
+                if (udpFrag) tunInbound.udp_fragment = true;
+                if (tfoToggle.checked) tunInbound.tcp_fast_open = true;
+                if (ecnToggle.checked) tunInbound.ecn = true; // ECN Injection
+
                 config = {
                     "log": { "level": "panic", "timestamp": true },
                     "dns": dnsSection,
-                    "inbounds": [{
-                        "type": "tun", "tag": "tun-in", "interface_name": "tun0",
-                        "address": ["172.19.0.1/30"], 
-                        "mtu": finalMtu,
-                        "auto_route": true, "strict_route": true,
-                        "stack": finalStack, 
-                        "sniff": true
-                    }],
+                    "inbounds": [tunInbound],
                     "outbounds": [outbound, { "type": "direct", "tag": "direct" }],
                     "route": {
                         "rules": [
-                            // FIX: Force Bootstrap DNS IP to use direct outbound explicitly via route rule
                             { "ip_cidr": [bootstrapIp + "/32"], "outbound": "direct" },
                             { "protocol": "dns", "action": "hijack-dns" },
                             { "ip_is_private": true, "outbound": "direct" }
@@ -659,22 +754,30 @@
                         "default_domain_resolver": "bootstrap"
                     }
                 };
+                
+                if (experimentalConfig) config.experimental = experimentalConfig;
 
             } else {
                 // --- TPROXY LOGIC ---
                 const directDnsIp = tproxyDnsSelect.value;
                 const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp };
 
+                // DNS Setup Logic (UDP vs DoH) for TPROXY
+                const dnsProtocol = dnsProtocolSelect.value; // 'udp' or 'doh'
+                const dnsType = (dnsProtocol === 'doh') ? 'https' : 'udp';
+                const googleDns = (dnsProtocol === 'doh') ? 'https://dns.google/dns-query' : '8.8.8.8';
+                const cfDns = (dnsProtocol === 'doh') ? 'https://cloudflare-dns.com/dns-query' : '1.1.1.1';
+
                 let remoteServers = [];
                 if (dnsToggle.checked) {
                     if (dnsSelect.value === 'google') {
-                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
+                         remoteServers.push({ "type": dnsType, "tag": "remote", "detour": "proxy", "server": googleDns });
                     } else {
-                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
+                         remoteServers.push({ "type": dnsType, "tag": "remote", "detour": "proxy", "server": cfDns });
                     }
                 } else {
-                    remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
-                    remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
+                    remoteServers.push({ "type": dnsType, "tag": "remote", "detour": "proxy", "server": googleDns });
+                    remoteServers.push({ "type": dnsType, "tag": "remote", "detour": "proxy", "server": cfDns });
                 }
 
                 // FAKE IP LOGIC FOR TPROXY
@@ -696,10 +799,20 @@
                     };
                 }
 
+                // TPROXY Inbound Construction
+                const tproxyInbound = {
+                    "type": "tproxy",
+                    "tag": "tproxy-in",
+                    "listen": "::",
+                    "listen_port": 9898
+                };
+                
+                if (tfoToggle.checked) tproxyInbound.tcp_fast_open = true;
+
                 config = {
                     "log": { "level": "panic" },
                     "dns": dnsSection,
-                    "inbounds": [ { "type": "tproxy", "tag": "tproxy-in", "listen": "::", "listen_port": 9898 } ],
+                    "inbounds": [ tproxyInbound ],
                     "outbounds": [{ "type": "direct", "tag": "direct" }, outbound],
                     "route": {
                         "rules": [
@@ -717,6 +830,8 @@
                         "default_domain_resolver": { "server": "direct-dns" }
                     }
                 };
+                
+                if (experimentalConfig) config.experimental = experimentalConfig;
             }
 
             outputConfig.textContent = JSON.stringify(config, null, 2);
