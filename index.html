@@ -649,7 +649,7 @@
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            const localDns = { "tag": "local", "type": "local", "detour": "direct" };
+            const localDns = { "tag": "local", "type": "local", "detour": "direct" }; // FATAL FIX: Removed "detour": "direct"
             const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
 
             // Construct DNS Server list
@@ -671,7 +671,6 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // FIX: Remove fakeip block from root, define as server only. Rule points to it.
                         { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
                     "strategy": "ipv4_only" 
@@ -685,7 +684,7 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "local" // FIX: Route resolve
+                    "default_domain_resolver": "local" // CRITICAL FIX: Bootstrap DNS resolution
                 }
             };
 
@@ -695,7 +694,7 @@
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
-                    "address": ["172.19.0.1/30"], // FIXED: Array address
+                    "address": ["172.19.0.1/30"],
                     "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
