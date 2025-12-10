@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v9.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v10.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -649,7 +649,7 @@
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            const localDns = { "tag": "local", "type": "local", "detour": "direct" };
+            const localDns = { "tag": "local", "type": "local" }; // Removed Detour direct (Safety)
             const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
 
             // Construct DNS Server list
@@ -671,7 +671,6 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // FIX: Remove fakeip block from root, define as server only. Rule points to it.
                         { "query_type": ["A", "AAAA"], "server": "fakeip" }
                     ],
                     "strategy": "ipv4_only" 
