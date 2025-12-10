@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247;
+            --primary-glow: 168, 85, 247; /* Purple 500 */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v12.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v13.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -642,17 +642,20 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration Logic (PC Style applied to Android)
+            // DNS Configuration Logic
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
 
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            const localDns = { "tag": "local", "type": "local" }; // NO DETOUR
+            const localDns = { "tag": "local", "type": "local", "detour": "direct" }; 
+
+            // Bootstrap DNS (Using Google Direct to resolve VPS IP)
+            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" };
 
             // Construct DNS Server list
-            let activeDnsServers = [];
+            let activeDnsServers = [bootstrapDns]; // Always include bootstrap
             
             if (isDnsCustomEnabled) {
                 // ON: Exclusive choice
@@ -674,10 +677,9 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // Resolve proxy host via Local DNS to prevent loops
-                        { "domain": [proxyDomain], "server": "local" }
+                        // FIX: Use Bootstrap DNS to resolve the proxy domain via Direct connection
+                        { "domain": [proxyDomain], "server": "bootstrap" }
                     ],
-                    "final": "google", // Default fallback if not custom
                     "strategy": "ipv4_only" 
                 },
                 "inbounds": [],
@@ -689,7 +691,7 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "local" // CRITICAL FIX
+                    "default_domain_resolver": "bootstrap" // FIX: Use Bootstrap resolver
                 }
             };
 
@@ -805,7 +807,8 @@
 
             config.outbounds.push(outbound);
             config.outbounds.push(
-                { "type": "direct", "tag": "direct" }
+                { "type": "direct", "tag": "direct" },
+                // Clean output - no unused blocks
             );
 
             return JSON.stringify(config, null, 2);
