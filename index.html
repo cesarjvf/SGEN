@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247; /* Purple 500 */
+            --primary-glow: 168, 85, 247;
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v13.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v14.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -649,13 +649,11 @@
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            const localDns = { "tag": "local", "type": "local", "detour": "direct" }; 
-
-            // Bootstrap DNS (Using Google Direct to resolve VPS IP)
-            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" };
+            // FIX: Removed "detour": "direct" to prevent FATAL error "makes no sense"
+            const localDns = { "tag": "local", "type": "local" }; 
 
             // Construct DNS Server list
-            let activeDnsServers = [bootstrapDns]; // Always include bootstrap
+            let activeDnsServers = [];
             
             if (isDnsCustomEnabled) {
                 // ON: Exclusive choice
@@ -677,8 +675,9 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // FIX: Use Bootstrap DNS to resolve the proxy domain via Direct connection
-                        { "domain": [proxyDomain], "server": "bootstrap" }
+                        // FIX: Use LOCAL DNS to resolve the proxy domain via Direct/System
+                        // This prevents the loop/closed pipe error when connecting to the VPS
+                        { "domain": [proxyDomain], "server": "local" }
                     ],
                     "strategy": "ipv4_only" 
                 },
@@ -691,16 +690,9 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "bootstrap" // FIX: Use Bootstrap resolver
+                    "default_domain_resolver": "local" // CRITICAL FIX: Bootstrap DNS resolution
                 }
             };
-
-            // Adjust final DNS logic based on selection
-            if (isDnsCustomEnabled) {
-                 config.dns.final = selectedDns;
-            } else {
-                 config.dns.final = "google"; // Default fallback
-            }
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
