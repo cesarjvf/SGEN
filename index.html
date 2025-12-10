@@ -568,22 +568,6 @@
                 if(fingerprintToggle.checked) outbound.tls.utls = { "enabled": true, "fingerprint": fingerprintSelect.value };
             }
 
-            // Common Experimental Config (from your example)
-            const experimental = {
-                "cache_file": {
-                    "enabled": true,
-                    "path": "sing_box.db",
-                    "store_fakeip": false
-                },
-                "clash_api": {
-                    "external_controller": "0.0.0.0:9090",
-                    "external_ui": "dashboard",
-                    "external_ui_download_url": "https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip",
-                    "external_ui_download_detour": "proxy",
-                    "default_mode": "rule"
-                }
-            };
-
             let config = {};
 
             if (selectedMode === 'tun') {
@@ -592,22 +576,41 @@
                 const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
                 const finalStack = stackToggle.checked ? stackSelect.value : "system";
                 
+                // DNS Server construction based on Toggle
+                let tunDnsServers = [
+                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp, "detour": "direct" }
+                ];
+                let tunFinal = "google";
+
+                if (dnsToggle.checked) {
+                    // Secure Mode: ONLY the selected one
+                    if (dnsSelect.value === 'google') {
+                        tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
+                        tunFinal = "google";
+                    } else {
+                        tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
+                        tunFinal = "cloudflare";
+                    }
+                } else {
+                    // Default Mode: BOTH
+                    tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
+                    tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
+                    tunFinal = "google"; // Default fallback
+                }
+
+                tunDnsServers.push({ "tag": "local", "type": "local", "detour": "direct" });
+
                 config = {
                     "log": { "level": "error", "timestamp": true },
                     "dns": {
-                        "servers": [
-                            { "tag": "bootstrap", "type": "udp", "server": bootstrapIp, "detour": "direct" },
-                            { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" },
-                            { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" },
-                            { "tag": "local", "type": "local", "detour": "direct" }
-                        ],
+                        "servers": tunDnsServers,
                         "rules": [ { "domain": [p.server], "server": "bootstrap" } ],
                         "strategy": "ipv4_only",
-                        "final": "google"
+                        "final": tunFinal
                     },
                     "inbounds": [{
                         "type": "tun", "tag": "tun-in", "interface_name": "tun0",
-                        "address": ["172.19.0.1/30"], // FIXED HERE
+                        "address": ["172.19.0.1/30"], 
                         "mtu": finalMtu,
                         "auto_route": true, "strict_route": true,
                         "stack": finalStack, 
@@ -622,22 +625,24 @@
                         "final": "proxy",
                         "auto_detect_interface": true,
                         "default_domain_resolver": "bootstrap"
-                    },
-                    "experimental": experimental
+                    }
                 };
-                if (dnsToggle.checked) config.dns.final = dnsSelect.value;
 
             } else {
                 // --- TPROXY LOGIC ---
                 const directDnsIp = tproxyDnsSelect.value;
-                const remoteDns = { "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" };
                 const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp };
 
                 let remoteServers = [];
                 if (dnsToggle.checked) {
-                    if (dnsSelect.value === 'google') remoteServers.push(remoteDns); 
-                    else { remoteDns.server = "1.1.1.1"; remoteServers.push(remoteDns); }
+                    // Toggle ON: ONLY selected
+                    if (dnsSelect.value === 'google') {
+                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
+                    } else {
+                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
+                    }
                 } else {
+                    // Toggle OFF: BOTH
                     remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
                     remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
                 }
@@ -668,8 +673,7 @@
                         "find_process": false,
                         "auto_detect_interface": true,
                         "default_domain_resolver": { "server": "direct-dns" }
-                    },
-                    "experimental": experimental
+                    }
                 };
             }
 
