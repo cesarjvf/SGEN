@@ -324,6 +324,15 @@
                             <div class="text-[10px] text-gray-500 mt-1">OFF: Dual DNS</div>
                         </div>
 
+                        <!-- Fake IP (Nuevo) -->
+                        <div id="fakeip-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-ghost text-gray-400"></i> Fake IP</span>
+                                <label><input type="checkbox" id="fakeip-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Boost Speed (198.18.x.x)</div>
+                        </div>
+
                         <!-- Fingerprint -->
                         <div id="client-fingerprint-option-group" class="glass-option p-3 disabled-option">
                             <div class="flex justify-between items-center mb-2">
@@ -413,6 +422,11 @@
         const dnsToggle = document.getElementById('dns-toggle');
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
+        
+        // FAKE IP Ref
+        const fakeIpToggle = document.getElementById('fakeip-toggle');
+        const fakeIpGroup = document.getElementById('fakeip-option-group');
+
         const fingerprintGroup = document.getElementById('client-fingerprint-option-group');
         const fingerprintToggle = document.getElementById('client-fingerprint-toggle');
         const fingerprintDetails = document.getElementById('client-fingerprint-details');
@@ -482,12 +496,16 @@
                 if(mtuToggle.checked) mtuInput.disabled = !tunEnabled;
                 
                 toggleGroup(bootstrapGroup, hasLink); // Bootstrap on for TUN
+                // FakeIP option logic for TUN
+                toggleGroup(fakeIpGroup, hasLink); 
             } else {
                 tunOptionsContainer.classList.add('hidden');
                 tproxyOptionsContainer.classList.remove('hidden');
                 tproxyDnsSelect.disabled = !hasLink;
 
                 toggleGroup(bootstrapGroup, false); // Bootstrap off for TPROXY
+                // FakeIP option logic for TPROXY (Now enabled if hasLink)
+                toggleGroup(fakeIpGroup, hasLink); 
             }
 
             // General Options
@@ -602,14 +620,24 @@
 
                 tunDnsServers.push({ "tag": "local", "type": "local" }); // REMOVED detour: direct
 
+                // FAKE IP LOGIC
+                let dnsSection = {
+                    "servers": tunDnsServers,
+                    "rules": [ { "domain": [p.server], "server": "bootstrap" } ],
+                    "strategy": "ipv4_only",
+                    "final": tunFinal
+                };
+
+                if (fakeIpToggle.checked) {
+                    dnsSection.fakeip = {
+                        "enabled": true,
+                        "inet4_range": "198.18.0.0/15"
+                    };
+                }
+
                 config = {
                     "log": { "level": "error", "timestamp": true },
-                    "dns": {
-                        "servers": tunDnsServers,
-                        "rules": [ { "domain": [p.server], "server": "bootstrap" } ],
-                        "strategy": "ipv4_only",
-                        "final": tunFinal
-                    },
+                    "dns": dnsSection,
                     "inbounds": [{
                         "type": "tun", "tag": "tun-in", "interface_name": "tun0",
                         "address": ["172.19.0.1/30"], 
@@ -649,18 +677,28 @@
                     remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
                 }
 
+                // FAKE IP LOGIC FOR TPROXY
+                let dnsSection = {
+                    "servers": [ ...remoteServers, directDns ],
+                    "rules": [
+                        { "clash_mode": "direct", "action": "route", "server": "direct-dns" },
+                        { "clash_mode": "global", "action": "route", "server": "remote" }
+                    ],
+                    "final": "remote",
+                    "independent_cache": false,
+                    "strategy": "ipv4_only"
+                };
+
+                if (fakeIpToggle.checked) {
+                    dnsSection.fakeip = {
+                        "enabled": true,
+                        "inet4_range": "198.18.0.0/15"
+                    };
+                }
+
                 config = {
                     "log": { "level": "error" },
-                    "dns": {
-                        "servers": [ ...remoteServers, directDns ],
-                        "rules": [
-                            { "clash_mode": "direct", "action": "route", "server": "direct-dns" },
-                            { "clash_mode": "global", "action": "route", "server": "remote" }
-                        ],
-                        "final": "remote",
-                        "independent_cache": false,
-                        "strategy": "ipv4_only"
-                    },
+                    "dns": dnsSection,
                     "inbounds": [ { "type": "tproxy", "tag": "tproxy-in", "listen": "::", "listen_port": 9898 } ],
                     "outbounds": [{ "type": "direct", "tag": "direct" }, outbound],
                     "route": {
