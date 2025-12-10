@@ -34,6 +34,12 @@
             --terminal-header: #e2e8f0;
         }
 
+        /* Fix: Alto contraste para el output en modo claro */
+        body.light-mode #output-config {
+            color: #0f172a; /* Slate 900 - Texto casi negro */
+            font-weight: 600; /* Un poco más de grosor para mejor legibilidad */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
@@ -126,7 +132,7 @@
         .mode-card.active i { color: #a855f7; }
 
         .mac-dots { display: flex; gap: 6px; }
-        .mac-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .mac-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
         .mac-red { background-color: #ef4444; }
         .mac-yellow { background-color: #eab308; }
         .mac-green { background-color: #22c55e; }
@@ -195,7 +201,7 @@
                     <textarea id="proxy-links" class="modern-input w-full h-32 rounded-xl p-3 text-xs placeholder-gray-500" placeholder="Pegar enlace vless://..."></textarea>
                 </div>
 
-                <!-- Mode & TUN Settings -->
+                <!-- Mode Settings -->
                 <div class="glass-card p-5">
                     <h3 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-network-wired text-purple-400"></i> Modo de Conexión
@@ -215,16 +221,21 @@
                     <div id="tun-options-container" class="grid grid-cols-1 gap-3 pt-3 border-t border-gray-500/20">
                         
                         <!-- Stack -->
-                        <div class="glass-option p-3 flex items-center justify-between">
-                            <div>
-                                <div class="font-semibold text-xs text-main flex items-center gap-2"><i class="fa-solid fa-layer-group text-blue-400"></i> Stack</div>
-                                <div class="text-[10px] text-gray-500">Motor de Red</div>
+                        <div class="glass-option p-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <div>
+                                    <div class="font-semibold text-xs text-main flex items-center gap-2"><i class="fa-solid fa-layer-group text-blue-400"></i> Stack</div>
+                                    <div class="text-[10px] text-gray-500">Motor de Red</div>
+                                </div>
+                                <label><input type="checkbox" id="stack-toggle" class="toggle-checkbox"><div class="toggle-switch"></div></label>
                             </div>
-                            <select id="stack-select" class="modern-input rounded text-xs p-1 w-32">
-                                <option value="system">System</option>
-                                <option value="gvisor">gVisor</option>
-                                <option value="mixed">Mixed</option>
-                            </select>
+                            <div id="stack-details" class="hidden mt-2 text-right">
+                                <select id="stack-select" class="modern-input rounded text-xs p-1 w-32 ml-auto block">
+                                    <option value="gvisor">gVisor</option>
+                                    <option value="mixed">Mixed</option>
+                                </select>
+                            </div>
+                            <div id="stack-default-text" class="text-[10px] text-gray-500 text-right mt-1">Default: System</div>
                         </div>
 
                         <!-- MTU -->
@@ -240,9 +251,25 @@
                                 <input type="number" id="mtu-input" class="modern-input w-full rounded p-1 text-center text-xs" value="1400" placeholder="1400">
                                 <div class="text-[9px] text-center text-gray-400 mt-1">Recomendado 1400-1500 (4G)</div>
                             </div>
-                            <div id="mtu-default-text" class="text-[10px] text-gray-500 text-right">Default: 1400</div>
+                            <div id="mtu-default-text" class="text-[10px] text-gray-500 text-right mt-1">Default: 1400</div>
                         </div>
                     </div>
+
+                    <!-- TPROXY Specific Options -->
+                    <div id="tproxy-options-container" class="hidden grid grid-cols-1 gap-3 pt-3 border-t border-gray-500/20">
+                         <!-- Direct DNS -->
+                         <div class="glass-option p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-server text-indigo-400"></i> Direct DNS</span>
+                            </div>
+                            <select id="tproxy-dns-select" class="modern-input w-full rounded text-xs p-1">
+                                <option value="1.1.1.1">Cloudflare (1.1.1.1)</option>
+                                <option value="8.8.8.8">Google (8.8.8.8)</option>
+                            </select>
+                            <div class="text-[10px] text-gray-500 mt-1">DNS para tráfico directo</div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Advanced -->
@@ -328,14 +355,19 @@
                 </div>
                 
                 <div class="glass-card overflow-hidden flex-1 min-h-[400px]">
-                    <div class="bg-black/20 px-4 py-2 border-b border-white/10 flex justify-between items-center">
-                        <span class="text-xs font-mono text-gray-400">config.json</span>
+                    <!-- FUTURISTIC HEADER BAR -->
+                    <div class="relative bg-gradient-to-r from-slate-900 via-[#1e293b] to-slate-900 px-4 py-2 border-b border-cyan-500/20 flex justify-between items-center shadow-lg">
+                        <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                        <span class="text-xs font-mono font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-sm tracking-wider">
+                            config.json
+                        </span>
                         <div class="mac-dots">
-                            <div class="mac-dot mac-red"></div>
-                            <div class="mac-dot mac-yellow"></div>
-                            <div class="mac-dot mac-green"></div>
+                            <div class="mac-dot mac-red shadow-inner"></div>
+                            <div class="mac-dot mac-yellow shadow-inner"></div>
+                            <div class="mac-dot mac-green shadow-inner"></div>
                         </div>
                     </div>
+                    
                     <pre class="p-4 overflow-auto h-full text-xs font-mono text-purple-200 whitespace-pre-wrap break-all" id="output-config"></pre>
                 </div>
             </div>
@@ -354,13 +386,23 @@
         
         let selectedMode = 'tun';
 
+        // TUN Options
         const tunOptionsContainer = document.getElementById('tun-options-container');
+        const stackToggle = document.getElementById('stack-toggle');
+        const stackDetails = document.getElementById('stack-details');
+        const stackDefaultText = document.getElementById('stack-default-text');
         const stackSelect = document.getElementById('stack-select');
+        
         const mtuToggle = document.getElementById('mtu-toggle');
         const mtuInput = document.getElementById('mtu-input');
         const mtuDetails = document.getElementById('mtu-details');
         const mtuDefaultText = document.getElementById('mtu-default-text');
 
+        // TPROXY Options
+        const tproxyOptionsContainer = document.getElementById('tproxy-options-container');
+        const tproxyDnsSelect = document.getElementById('tproxy-dns-select');
+
+        // General Options
         const keepAliveGroup = document.getElementById('keep-alive-option-group');
         const keepAliveToggle = document.getElementById('keep-alive-toggle');
         const insecureGroup = document.getElementById('insecure-option-group');
@@ -400,21 +442,21 @@
         };
 
         // Toggles
-        const toggleDisplay = (toggle, target) => {
-            toggle.addEventListener('change', () => target.classList.toggle('hidden', !toggle.checked));
+        const toggleDisplay = (toggle, target, inverseTarget = null) => {
+            toggle.addEventListener('change', () => {
+                const isChecked = toggle.checked;
+                target.classList.toggle('hidden', !isChecked);
+                if (inverseTarget) inverseTarget.classList.toggle('hidden', isChecked);
+            });
         };
         toggleDisplay(dnsToggle, dnsDetails);
         toggleDisplay(fingerprintToggle, fingerprintDetails);
         
-        mtuToggle.addEventListener('change', () => {
-            if(mtuToggle.checked) {
-                mtuDetails.classList.remove('hidden');
-                mtuDefaultText.classList.add('hidden');
-            } else {
-                mtuDetails.classList.add('hidden');
-                mtuDefaultText.classList.remove('hidden');
-            }
-        });
+        // MTU Toggle
+        toggleDisplay(mtuToggle, mtuDetails, mtuDefaultText);
+
+        // Stack Toggle
+        toggleDisplay(stackToggle, stackDetails, stackDefaultText);
 
         function updateUIState() {
             const hasLink = proxyLinksInput.value.trim().length > 0;
@@ -428,15 +470,23 @@
             // Mode Dependent Options
             if (selectedMode === 'tun') {
                 tunOptionsContainer.classList.remove('hidden');
+                tproxyOptionsContainer.classList.add('hidden');
+                
                 // Only enable if link is present
                 const tunEnabled = hasLink;
-                stackSelect.disabled = !tunEnabled;
+                
+                stackToggle.disabled = !tunEnabled;
+                if(stackToggle.checked) stackSelect.disabled = !tunEnabled;
+
                 mtuToggle.disabled = !tunEnabled;
                 if(mtuToggle.checked) mtuInput.disabled = !tunEnabled;
                 
                 toggleGroup(bootstrapGroup, hasLink); // Bootstrap on for TUN
             } else {
                 tunOptionsContainer.classList.add('hidden');
+                tproxyOptionsContainer.classList.remove('hidden');
+                tproxyDnsSelect.disabled = !hasLink;
+
                 toggleGroup(bootstrapGroup, false); // Bootstrap off for TPROXY
             }
 
@@ -524,6 +574,7 @@
                 // --- TUN LOGIC (v18 + MTU/Stack) ---
                 const bootstrapIp = (bootstrapSelect.value === 'google') ? '8.8.8.8' : '1.1.1.1';
                 const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
+                const finalStack = stackToggle.checked ? stackSelect.value : "system"; // Logic update
                 
                 config = {
                     "log": { "level": "error", "timestamp": true },
@@ -541,9 +592,9 @@
                     "inbounds": [{
                         "type": "tun", "tag": "tun-in", "interface_name": "tun0",
                         "inet4_address": ["172.19.0.1/30"],
-                        "mtu": finalMtu, // Custom MTU
+                        "mtu": finalMtu,
                         "auto_route": true, "strict_route": true,
-                        "stack": stackSelect.value, // Custom Stack
+                        "stack": finalStack, 
                         "sniff": true
                     }],
                     "outbounds": [outbound, { "type": "direct", "tag": "direct" }],
@@ -560,9 +611,10 @@
                 if (dnsToggle.checked) config.dns.final = dnsSelect.value;
 
             } else {
-                // --- TPROXY LOGIC (Clean Reference) ---
+                // --- TPROXY LOGIC ---
+                const directDnsIp = tproxyDnsSelect.value; // New TPROXY Option
                 const remoteDns = { "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" };
-                const directDns = { "type": "udp", "tag": "direct-dns", "server": "1.1.1.1" }; 
+                const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp }; // Updated
 
                 let remoteServers = [];
                 if (dnsToggle.checked) {
