@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247; /* Purple 500 */
+            --primary-glow: 168, 85, 247;
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v11.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v12.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -642,27 +642,28 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration Logic
+            // DNS Configuration Logic (PC Style applied to Android)
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
 
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            const localDns = { "tag": "local", "type": "local" }; // NO DETOUR (Fixes "makes no sense" error)
-            const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
+            const localDns = { "tag": "local", "type": "local" }; // NO DETOUR
 
             // Construct DNS Server list
             let activeDnsServers = [];
             
             if (isDnsCustomEnabled) {
+                // ON: Exclusive choice
                 if (selectedDns === 'google') activeDnsServers.push(googleDns);
                 else if (selectedDns === 'cloudflare') activeDnsServers.push(cloudflareDns);
             } else {
+                // OFF: Dual (Both)
                 activeDnsServers.push(googleDns, cloudflareDns);
             }
             
-            activeDnsServers.push(localDns, fakeipDns);
+            activeDnsServers.push(localDns);
 
             // Get Server Domain
             const p = proxies[0]; 
@@ -673,12 +674,10 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // FIX: Explicitly resolve proxy domain via local DNS to prevent FakeIP loop
-                        { "domain": [proxyDomain], "server": "local" },
-                        
-                        // FakeIP Rule - Restricted to Inbounds to allow internal resolution to work
-                        { "inbound": ["tun-in", "tproxy-in"], "server": "fakeip" }
+                        // Resolve proxy host via Local DNS to prevent loops
+                        { "domain": [proxyDomain], "server": "local" }
                     ],
+                    "final": "google", // Default fallback if not custom
                     "strategy": "ipv4_only" 
                 },
                 "inbounds": [],
@@ -690,9 +689,16 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "local" // CRITICAL FIX: Bootstrap DNS resolution
+                    "default_domain_resolver": "local" // CRITICAL FIX
                 }
             };
+
+            // Adjust final DNS logic based on selection
+            if (isDnsCustomEnabled) {
+                 config.dns.final = selectedDns;
+            } else {
+                 config.dns.final = "google"; // Default fallback
+            }
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
@@ -700,11 +706,11 @@
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
-                    "address": ["172.19.0.1/30"],
+                    "address": ["172.19.0.1/30"], // FIXED: Array address
                     "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
-                    "stack": "system",
+                    "stack": "system", // Default
                     "sniff": true
                 };
 
@@ -799,8 +805,7 @@
 
             config.outbounds.push(outbound);
             config.outbounds.push(
-                { "type": "direct", "tag": "direct" },
-                // Clean output - no unused blocks
+                { "type": "direct", "tag": "direct" }
             );
 
             return JSON.stringify(config, null, 2);
