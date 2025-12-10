@@ -636,7 +636,7 @@
                 }
 
                 config = {
-                    "log": { "level": "silent", "timestamp": true },
+                    "log": { "level": "panic", "timestamp": true },
                     "dns": dnsSection,
                     "inbounds": [{
                         "type": "tun", "tag": "tun-in", "interface_name": "tun0",
@@ -697,7 +697,7 @@
                 }
 
                 config = {
-                    "log": { "level": "silent" },
+                    "log": { "level": "panic" },
                     "dns": dnsSection,
                     "inbounds": [ { "type": "tproxy", "tag": "tproxy-in", "listen": "::", "listen_port": 9898 } ],
                     "outbounds": [{ "type": "direct", "tag": "direct" }, outbound],
