@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247;
+            --primary-glow: 168, 85, 247; /* Purple 500 */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v15.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v16.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -642,6 +642,7 @@
 
         function generateSingboxConfig(proxies) {
             
+            // DNS Configuration Logic
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
 
@@ -653,15 +654,17 @@
             const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
             
             // Bootstrap DNS: Use Google Direct to resolve proxy IP to avoid loops
-            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" };
+            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" }; // REMOVED DETOUR FROM HERE
 
             // Construct DNS Server list
-            let activeDnsServers = [bootstrapDns]; 
+            let activeDnsServers = [ { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8" } ]; // Bootstrap clean
             
             if (isDnsCustomEnabled) {
+                // ON: Exclusive choice
                 if (selectedDns === 'google') activeDnsServers.push(googleDns);
                 else if (selectedDns === 'cloudflare') activeDnsServers.push(cloudflareDns);
             } else {
+                // OFF: Dual (Both)
                 activeDnsServers.push(googleDns, cloudflareDns);
             }
             
