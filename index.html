@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247;
+            --primary-glow: 168, 85, 247; /* Purple 500 */
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v21.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v22.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -227,7 +227,6 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         
-                        <!-- Keep Alive -->
                         <div id="keep-alive-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Keep Alive</div>
@@ -237,7 +236,6 @@
                             <div class="text-[10px] text-theme-muted">gRPC Optimizado</div>
                         </div>
 
-                        <!-- Insecure -->
                         <div id="insecure-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Insecure TLS</div>
@@ -247,21 +245,6 @@
                             <div class="text-[10px] text-yellow-500/80">Skip Verify (SNI)</div>
                         </div>
 
-                        <!-- Bootstrap DNS -->
-                        <div id="bootstrap-dns-option-group" class="glass-option rounded-xl p-3 border border-purple-500/30 disabled-option">
-                            <div class="flex justify-between items-center mb-2">
-                                <div>
-                                    <div class="font-semibold text-xs text-theme-main">Bootstrap DNS</div>
-                                    <div class="text-[10px] text-theme-muted">Conexión Inicial Directa</div>
-                                </div>
-                            </div>
-                            <select id="bootstrap-dns-select" class="modern-input w-full rounded text-xs p-1" disabled>
-                                <option value="google">Google (8.8.8.8)</option>
-                                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
-                            </select>
-                        </div>
-
-                        <!-- DNS Seguro -->
                         <div id="dns-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">DNS Seguro</div>
@@ -277,7 +260,6 @@
                             <div class="text-[10px] text-theme-muted mt-1">OFF: Google + Cloudflare</div>
                         </div>
 
-                        <!-- Fingerprint -->
                         <div id="client-fingerprint-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">uTLS</div>
@@ -373,10 +355,6 @@
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
 
-        // Bootstrap DNS UI Elements
-        const bootstrapDnsOptionGroup = document.getElementById('bootstrap-dns-option-group');
-        const bootstrapDnsSelect = document.getElementById('bootstrap-dns-select');
-
         const keepAliveOptionGroup = document.getElementById('keep-alive-option-group');
         const keepAliveToggle = document.getElementById('keep-alive-toggle');
 
@@ -436,22 +414,9 @@
             if(details) details.classList.add('hidden');
         }
 
-        // Helper for Select elements in groups
-        function enableSelectGroup(group, select) {
-            group.classList.remove('disabled-option');
-            select.disabled = false;
-        }
-        function disableSelectGroup(group, select) {
-            group.classList.add('disabled-option');
-            select.disabled = true;
-        }
-
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
-                // Enable DNS Options
                 enableGroup(dnsOptionGroup, dnsToggle);
-                enableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
-
                 if (isGrpcAvailable) {
                     enableGroup(keepAliveOptionGroup, keepAliveToggle);
                     keepAliveToggle.checked = true;
@@ -459,10 +424,8 @@
                     disableGroup(keepAliveOptionGroup, keepAliveToggle);
                 }
             } else {
-                // Disable All if no link
                 disableGroup(keepAliveOptionGroup, keepAliveToggle);
                 disableGroup(dnsOptionGroup, dnsToggle, dnsDetails);
-                disableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
             }
 
             if (isTlsAvailable) {
@@ -679,6 +642,7 @@
 
         function generateSingboxConfig(proxies) {
             
+            // DNS Configuration Logic
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
             const bootstrapDnsValue = bootstrapDnsSelect.value;
@@ -694,7 +658,7 @@
                 "tag": "bootstrap", 
                 "type": "udp", 
                 "server": bootstrapServerIp 
-                // Removed detour: direct (implicit)
+                // Removed detour: direct (it's implicit)
             };
 
             // Construct DNS Server list
@@ -727,10 +691,13 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
-                        // Force Bootstrap DNS to Direct for the loop fix
+                        // BLOCK QUIC (FIX TPROXY STABILITY) - Added for TProxy stability
+                        { "protocol": "quic", "outbound": "block" },
+                        
+                        // Force Bootstrap DNS IPs to Direct
                         { "ip_cidr": ["8.8.8.8/32", "1.1.1.1/32"], "outbound": "direct" },
                         
-                        { "protocol": "dns", "action": "hijack-dns", "port": 53 },
+                        { "protocol": "dns", "action": "hijack-dns" },
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
                     "final": "proxy",
@@ -738,6 +705,13 @@
                     "default_domain_resolver": "bootstrap"
                 }
             };
+
+            // Adjust final DNS
+            if (isDnsCustomEnabled) {
+                 config.dns.final = selectedDns;
+            } else {
+                 config.dns.final = "google"; // Default fallback
+            }
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
@@ -766,8 +740,9 @@
                         "listen": "::",
                         "listen_port": 9898,
                         "sniff": true,
-                        // TProxy UDP Fix: Disable override to preserve original destination in case of fail
-                        "sniff_override_destination": false 
+                        // TProxy UDP Fix: ENABLE override standard for TProxy to work best usually
+                        // Reverting to TRUE as per standard TProxy docs, paired with QUIC block for stability
+                        "sniff_override_destination": true 
                     },
                     {
                         "type": "redirect",
@@ -846,6 +821,7 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
+                { "type": "block", "tag": "block" } // Added block outbound for QUIC
             );
 
             return JSON.stringify(config, null, 2);
