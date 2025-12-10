@@ -68,7 +68,6 @@
             opacity: 0.5;
             pointer-events: none;
             filter: grayscale(0.8);
-            transition: all 0.3s ease;
         }
 
         .modern-input {
@@ -164,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v18.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v20.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -248,7 +247,7 @@
                             <div class="text-[10px] text-yellow-500/80">Skip Verify (SNI)</div>
                         </div>
 
-                        <!-- Bootstrap DNS (New ID & Disabled by default) -->
+                        <!-- Bootstrap DNS -->
                         <div id="bootstrap-dns-option-group" class="glass-option rounded-xl p-3 border border-purple-500/30 disabled-option">
                             <div class="flex justify-between items-center mb-2">
                                 <div>
@@ -374,7 +373,7 @@
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
 
-        // NEW: Bootstrap DNS UI Elements
+        // Bootstrap DNS UI
         const bootstrapDnsOptionGroup = document.getElementById('bootstrap-dns-option-group');
         const bootstrapDnsSelect = document.getElementById('bootstrap-dns-select');
 
@@ -449,7 +448,7 @@
 
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
-                // Enable DNS Options
+                // Enable DNS & Bootstrap
                 enableGroup(dnsOptionGroup, dnsToggle);
                 enableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
 
@@ -695,7 +694,7 @@
                 "tag": "bootstrap", 
                 "type": "udp", 
                 "server": bootstrapServerIp 
-                // Removed detour: direct (it's implicit)
+                // Removed detour: direct (implicit)
             };
 
             // Construct DNS Server list
@@ -728,6 +727,8 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
+                        // BLOCK QUIC (FIX TPROXY STABILITY)
+                        { "protocol": "quic", "outbound": "block" },
                         { "protocol": "dns", "action": "hijack-dns" },
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
@@ -850,6 +851,7 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
+                { "type": "block", "tag": "block" } // Added block outbound for QUIC rule
             );
 
             return JSON.stringify(config, null, 2);
