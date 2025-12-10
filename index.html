@@ -163,7 +163,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v20.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v21.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -373,7 +373,7 @@
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
 
-        // Bootstrap DNS UI
+        // Bootstrap DNS UI Elements
         const bootstrapDnsOptionGroup = document.getElementById('bootstrap-dns-option-group');
         const bootstrapDnsSelect = document.getElementById('bootstrap-dns-select');
 
@@ -448,7 +448,7 @@
 
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
-                // Enable DNS & Bootstrap
+                // Enable DNS Options
                 enableGroup(dnsOptionGroup, dnsToggle);
                 enableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
 
@@ -694,7 +694,7 @@
                 "tag": "bootstrap", 
                 "type": "udp", 
                 "server": bootstrapServerIp 
-                // Removed detour: direct (implicit)
+                // Removed detour: direct (it's implicit)
             };
 
             // Construct DNS Server list
@@ -727,9 +727,7 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
-                        // BLOCK QUIC (FIX TPROXY STABILITY)
-                        { "protocol": "quic", "outbound": "block" },
-                        { "protocol": "dns", "action": "hijack-dns" },
+                        { "protocol": "dns", "action": "hijack-dns", "port": 53 }, // Added port 53 for precision
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
                     "final": "proxy",
@@ -772,7 +770,8 @@
                         "listen": "::",
                         "listen_port": 9898,
                         "sniff": true,
-                        "sniff_override_destination": true
+                        // TProxy UDP Fix: Disable override to preserve original destination in case of fail
+                        "sniff_override_destination": false 
                     },
                     {
                         "type": "redirect",
@@ -851,7 +850,6 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
-                { "type": "block", "tag": "block" } // Added block outbound for QUIC rule
             );
 
             return JSON.stringify(config, null, 2);
