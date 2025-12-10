@@ -68,6 +68,7 @@
             opacity: 0.5;
             pointer-events: none;
             filter: grayscale(0.8);
+            transition: all 0.3s ease;
         }
 
         .modern-input {
@@ -163,7 +164,7 @@
             <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
                 Sing-box Android
             </h1>
-            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v16.0</span></p>
+            <p class="text-theme-muted text-xs md:text-sm font-light tracking-wide uppercase">Magisk Optimized (1.12+) <span class="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full ml-1">v18.0</span></p>
         </div>
 
         <div id="status-container" class="hidden mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-medium text-sm transition-all duration-300 text-theme-main"></div>
@@ -227,6 +228,7 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         
+                        <!-- Keep Alive -->
                         <div id="keep-alive-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Keep Alive</div>
@@ -236,6 +238,7 @@
                             <div class="text-[10px] text-theme-muted">gRPC Optimizado</div>
                         </div>
 
+                        <!-- Insecure -->
                         <div id="insecure-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">Insecure TLS</div>
@@ -245,6 +248,21 @@
                             <div class="text-[10px] text-yellow-500/80">Skip Verify (SNI)</div>
                         </div>
 
+                        <!-- Bootstrap DNS (New ID & Disabled by default) -->
+                        <div id="bootstrap-dns-option-group" class="glass-option rounded-xl p-3 border border-purple-500/30 disabled-option">
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <div class="font-semibold text-xs text-theme-main">Bootstrap DNS</div>
+                                    <div class="text-[10px] text-theme-muted">Conexión Inicial Directa</div>
+                                </div>
+                            </div>
+                            <select id="bootstrap-dns-select" class="modern-input w-full rounded text-xs p-1" disabled>
+                                <option value="google">Google (8.8.8.8)</option>
+                                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                            </select>
+                        </div>
+
+                        <!-- DNS Seguro -->
                         <div id="dns-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">DNS Seguro</div>
@@ -260,6 +278,7 @@
                             <div class="text-[10px] text-theme-muted mt-1">OFF: Google + Cloudflare</div>
                         </div>
 
+                        <!-- Fingerprint -->
                         <div id="client-fingerprint-option-group" class="glass-option rounded-xl p-3 disabled-option">
                             <div class="flex justify-between items-center mb-1">
                                 <div class="font-semibold text-xs text-theme-main">uTLS</div>
@@ -355,6 +374,10 @@
         const dnsDetails = document.getElementById('dns-details');
         const dnsSelect = document.getElementById('dns-select');
 
+        // NEW: Bootstrap DNS UI Elements
+        const bootstrapDnsOptionGroup = document.getElementById('bootstrap-dns-option-group');
+        const bootstrapDnsSelect = document.getElementById('bootstrap-dns-select');
+
         const keepAliveOptionGroup = document.getElementById('keep-alive-option-group');
         const keepAliveToggle = document.getElementById('keep-alive-toggle');
 
@@ -414,9 +437,22 @@
             if(details) details.classList.add('hidden');
         }
 
+        // Helper for Select elements in groups
+        function enableSelectGroup(group, select) {
+            group.classList.remove('disabled-option');
+            select.disabled = false;
+        }
+        function disableSelectGroup(group, select) {
+            group.classList.add('disabled-option');
+            select.disabled = true;
+        }
+
         function toggleAdvancedOptionsState(isTlsAvailable, isGrpcAvailable, hasLink) {
             if (hasLink) {
+                // Enable DNS Options
                 enableGroup(dnsOptionGroup, dnsToggle);
+                enableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
+
                 if (isGrpcAvailable) {
                     enableGroup(keepAliveOptionGroup, keepAliveToggle);
                     keepAliveToggle.checked = true;
@@ -424,8 +460,10 @@
                     disableGroup(keepAliveOptionGroup, keepAliveToggle);
                 }
             } else {
+                // Disable All if no link
                 disableGroup(keepAliveOptionGroup, keepAliveToggle);
                 disableGroup(dnsOptionGroup, dnsToggle, dnsDetails);
+                disableSelectGroup(bootstrapDnsOptionGroup, bootstrapDnsSelect);
             }
 
             if (isTlsAvailable) {
@@ -501,7 +539,7 @@
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
                     
-                    copyText.textContent = '¡Copiado!';
+                    copyText.textContent = 'COPIADO';
                     copyIcon.className = 'fa-solid fa-check text-purple-500';
                     setTimeout(() => {
                         copyText.textContent = 'COPIAR';
@@ -642,33 +680,35 @@
 
         function generateSingboxConfig(proxies) {
             
-            // DNS Configuration Logic
             const isDnsCustomEnabled = dnsToggle.checked;
             const selectedDns = dnsSelect.value;
+            const bootstrapDnsValue = bootstrapDnsSelect.value;
+            const bootstrapServerIp = (bootstrapDnsValue === 'google') ? '8.8.8.8' : '1.1.1.1';
 
             // Define server objects
             const googleDns = { "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" };
             const cloudflareDns = { "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" };
-            // FIX: Removed detour from local DNS to prevent "makes no sense" FATAL error on Android
-            const localDns = { "tag": "local", "type": "local" }; 
-            const fakeipDns = { "tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15" };
+            const localDns = { "tag": "local", "type": "local" };
             
-            // Bootstrap DNS: Use Google Direct to resolve proxy IP to avoid loops
-            const bootstrapDns = { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8", "detour": "direct" }; // REMOVED DETOUR FROM HERE
+            // Bootstrap DNS
+            const bootstrapDns = { 
+                "tag": "bootstrap", 
+                "type": "udp", 
+                "server": bootstrapServerIp 
+                // Removed detour: direct (it's implicit)
+            };
 
             // Construct DNS Server list
-            let activeDnsServers = [ { "tag": "bootstrap", "type": "udp", "server": "8.8.8.8" } ]; // Bootstrap clean
+            let activeDnsServers = [bootstrapDns]; 
             
             if (isDnsCustomEnabled) {
-                // ON: Exclusive choice
                 if (selectedDns === 'google') activeDnsServers.push(googleDns);
                 else if (selectedDns === 'cloudflare') activeDnsServers.push(cloudflareDns);
             } else {
-                // OFF: Dual (Both)
                 activeDnsServers.push(googleDns, cloudflareDns);
             }
             
-            activeDnsServers.push(localDns, fakeipDns);
+            activeDnsServers.push(localDns);
 
             // Get Server Domain
             const p = proxies[0]; 
@@ -679,10 +719,8 @@
                 "dns": { 
                     "servers": activeDnsServers,
                     "rules": [
-                        // Resolve Proxy Domain via Bootstrap (Direct)
-                        { "domain": [proxyDomain], "server": "bootstrap" },
-                        // FakeIP for everything else
-                        { "query_type": ["A", "AAAA"], "server": "fakeip" }
+                        // Resolve Proxy Domain via Bootstrap
+                        { "domain": [proxyDomain], "server": "bootstrap" }
                     ],
                     "strategy": "ipv4_only" 
                 },
@@ -695,9 +733,16 @@
                     ],
                     "final": "proxy",
                     "auto_detect_interface": true,
-                    "default_domain_resolver": "bootstrap" // FIX: Use Bootstrap resolver
+                    "default_domain_resolver": "bootstrap"
                 }
             };
+
+            // Adjust final DNS
+            if (isDnsCustomEnabled) {
+                 config.dns.final = selectedDns;
+            } else {
+                 config.dns.final = "google"; // Default fallback
+            }
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
@@ -705,11 +750,11 @@
                     "type": "tun",
                     "tag": "tun-in",
                     "interface_name": "tun0",
-                    "address": ["172.19.0.1/30"], // FIXED: Array address
+                    "address": ["172.19.0.1/30"],
                     "mtu": 1400,
                     "auto_route": true,
                     "strict_route": true,
-                    "stack": "system", // Default
+                    "stack": "system",
                     "sniff": true
                 };
 
@@ -805,7 +850,6 @@
             config.outbounds.push(outbound);
             config.outbounds.push(
                 { "type": "direct", "tag": "direct" },
-                // Clean output - no unused blocks
             );
 
             return JSON.stringify(config, null, 2);
