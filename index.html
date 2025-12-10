@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-glow: 168, 85, 247; /* Purple 500 */
+            --primary-glow: 168, 85, 247;
             --bg-color: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -694,7 +694,7 @@
                 "tag": "bootstrap", 
                 "type": "udp", 
                 "server": bootstrapServerIp 
-                // Removed detour: direct (it's implicit)
+                // Removed detour: direct (implicit)
             };
 
             // Construct DNS Server list
@@ -727,7 +727,10 @@
                 "outbounds": [],
                 "route": {
                     "rules": [
-                        { "protocol": "dns", "action": "hijack-dns", "port": 53 }, // Added port 53 for precision
+                        // Force Bootstrap DNS to Direct for the loop fix
+                        { "ip_cidr": ["8.8.8.8/32", "1.1.1.1/32"], "outbound": "direct" },
+                        
+                        { "protocol": "dns", "action": "hijack-dns", "port": 53 },
                         { "ip_is_private": true, "outbound": "direct" }
                     ],
                     "final": "proxy",
@@ -735,13 +738,6 @@
                     "default_domain_resolver": "bootstrap"
                 }
             };
-
-            // Adjust final DNS
-            if (isDnsCustomEnabled) {
-                 config.dns.final = selectedDns;
-            } else {
-                 config.dns.final = "google"; // Default fallback
-            }
 
             // Inbounds Logic
             if (selectedMode === 'tun') {
