@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generador Sing-box Android v20</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-glow: 168, 85, 247; /* Purple 500 */
+            --bg-color: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --option-bg: rgba(30, 41, 59, 0.5);
+            --terminal-bg: #0f1115;
+            --terminal-header: #1e1e1e;
+        }
+
+        body.light-mode {
+            --bg-color: #fdf4ff;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.05);
+            --input-bg: #ffffff;
+            --option-bg: #f8fafc;
+            --terminal-bg: #f8fafc;
+            --terminal-header: #e2e8f0;
+        }
+
+        /* Fix: Alto contraste para el output en modo claro */
+        body.light-mode #output-config {
+            color: #0f172a; /* Slate 900 - Texto casi negro */
+            font-weight: 600; /* Un poco más de grosor para mejor legibilidad */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            transition: 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-option {
+            background: var(--option-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            transition: 0.3s;
+        }
+
+        .disabled-option {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+
+        .modern-input {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .modern-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+        }
+
+        .theme-toggle-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
+
+        /* Switches */
+        .toggle-checkbox { display: none; }
+        .toggle-switch {
+            width: 44px; height: 24px;
+            background: #cbd5e1;
+            border-radius: 99px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        body:not(.light-mode) .toggle-switch { background: #334155; }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s;
+        }
+        .toggle-checkbox:checked + .toggle-switch { background: #a855f7; }
+        .toggle-checkbox:checked + .toggle-switch::after { transform: translateX(20px); }
+
+        .mode-card { cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .mode-card.active {
+            background: rgba(168, 85, 247, 0.1);
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+        }
+        .mode-card.active i { color: #a855f7; }
+
+        .mac-dots { display: flex; gap: 6px; }
+        .mac-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
+        .mac-red { background-color: #ef4444; }
+        .mac-yellow { background-color: #eab308; }
+        .mac-green { background-color: #22c55e; }
+
+        /* Buttons */
+        .btn-gen {
+            background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+            transition: all 0.3s;
+        }
+        .btn-gen:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4); }
+        
+        .btn-copy {
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            transition: all 0.3s;
+        }
+        .btn-copy:hover:not(:disabled) { background: rgba(100, 116, 139, 0.3); }
+
+        .btn-success { 
+            background: #10b981 !important; 
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        pre { margin: 0; }
+    </style>
+</head>
+<body class="min-h-screen py-6 px-3 flex justify-center items-start">
+
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" class="theme-toggle-btn"><i class="fas fa-moon text-xl"></i></button>
+
+    <div class="w-full max-w-5xl space-y-6">
+        
+        <!-- Header -->
+        <div class="text-center mt-4">
+            <div class="inline-flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt text-yellow-400 text-3xl animate-pulse"></i>
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 drop-shadow-sm">
+                    Sing-box Android
+                </h1>
+            </div>
+            <p class="text-xs text-gray-500 tracking-widest uppercase mt-1 font-semibold">
+                Magisk Optimized <span class="text-yellow-500 font-bold ml-1 bg-yellow-500/10 px-2 py-0.5 rounded">SGEN V20.0</span>
+            </p>
+        </div>
+
+        <!-- Status -->
+        <div id="status-container" class="hidden glass-card p-3 text-center text-sm font-medium"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Controls -->
+            <div class="lg:col-span-7 space-y-5">
+                
+                <!-- Input -->
+                <div class="glass-card p-5 space-y-3">
+                    <div class="flex justify-between items-end">
+                        <label class="text-sm font-bold text-gray-400 block flex items-center gap-2">
+                            <i class="fa-solid fa-link text-purple-400"></i> Enlace de Configuración
+                        </label>
+                        <span class="text-[10px] font-bold text-yellow-500/80 uppercase tracking-wider bg-yellow-500/10 px-2 py-1 rounded">VLESS • VMESS • TROJAN</span>
+                    </div>
+                    <textarea id="proxy-links" class="modern-input w-full h-32 rounded-xl p-3 text-xs placeholder-gray-500" placeholder="Pegar enlace vless://..."></textarea>
+                </div>
+
+                <!-- Mode Settings -->
+                <div class="glass-card p-5">
+                    <h3 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-network-wired text-purple-400"></i> Modo de Conexión
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div id="tun-btn" class="mode-card glass-option p-3 text-center active" onclick="selectMode('tun')">
+                            <i class="fa-solid fa-shield-halved text-xl mb-1 text-gray-400"></i>
+                            <div class="font-bold text-xs mt-1">TUN Mode</div>
+                        </div>
+                        <div id="tproxy-btn" class="mode-card glass-option p-3 text-center" onclick="selectMode('tproxy')">
+                            <i class="fa-solid fa-route text-xl mb-1 text-gray-400"></i>
+                            <div class="font-bold text-xs mt-1">TPROXY</div>
+                        </div>
+                    </div>
+
+                    <!-- TUN Specific Options (Stack & MTU) -->
+                    <div id="tun-options-container" class="grid grid-cols-1 gap-3 pt-3 border-t border-gray-500/20">
+                        
+                        <!-- Stack -->
+                        <div class="glass-option p-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <div>
+                                    <div class="font-semibold text-xs text-main flex items-center gap-2"><i class="fa-solid fa-layer-group text-blue-400"></i> Stack</div>
+                                    <div class="text-[10px] text-gray-500">Motor de Red</div>
+                                </div>
+                                <label><input type="checkbox" id="stack-toggle" class="toggle-checkbox"><div class="toggle-switch"></div></label>
+                            </div>
+                            <div id="stack-details" class="hidden mt-2 text-right">
+                                <select id="stack-select" class="modern-input rounded text-xs p-1 w-32 ml-auto block">
+                                    <option value="gvisor">gVisor</option>
+                                    <option value="mixed">Mixed</option>
+                                </select>
+                            </div>
+                            <div id="stack-default-text" class="text-[10px] text-gray-500 text-right mt-1">Default: System</div>
+                        </div>
+
+                        <!-- MTU -->
+                        <div class="glass-option p-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <div>
+                                    <div class="font-semibold text-xs text-main flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal text-blue-400"></i> MTU</div>
+                                    <div class="text-[10px] text-gray-500">Tamaño de Paquete</div>
+                                </div>
+                                <label><input type="checkbox" id="mtu-toggle" class="toggle-checkbox"><div class="toggle-switch"></div></label>
+                            </div>
+                            <div id="mtu-details" class="hidden mt-2">
+                                <input type="number" id="mtu-input" class="modern-input w-full rounded p-1 text-center text-xs" value="1400" placeholder="1400">
+                                <div class="text-[9px] text-center text-gray-400 mt-1">Recomendado 1400-1500 (4G)</div>
+                            </div>
+                            <div id="mtu-default-text" class="text-[10px] text-gray-500 text-right mt-1">Default: 1400</div>
+                        </div>
+                    </div>
+
+                    <!-- TPROXY Specific Options -->
+                    <div id="tproxy-options-container" class="hidden grid grid-cols-1 gap-3 pt-3 border-t border-gray-500/20">
+                         <!-- Direct DNS -->
+                         <div class="glass-option p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-server text-indigo-400"></i> Direct DNS</span>
+                            </div>
+                            <select id="tproxy-dns-select" class="modern-input w-full rounded text-xs p-1">
+                                <option value="1.1.1.1">Cloudflare (1.1.1.1)</option>
+                                <option value="8.8.8.8">Google (8.8.8.8)</option>
+                            </select>
+                            <div class="text-[10px] text-gray-500 mt-1">DNS para tráfico directo</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Advanced -->
+                <div class="glass-card p-5">
+                    <h3 class="text-sm font-bold text-gray-400 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-purple-400"></i> Ajustes Avanzados
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <!-- Keep Alive -->
+                        <div id="keep-alive-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-heart-pulse text-red-400"></i> Keep Alive</span>
+                                <label><input type="checkbox" id="keep-alive-toggle" class="toggle-checkbox" checked disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">gRPC</div>
+                        </div>
+
+                        <!-- Insecure -->
+                        <div id="insecure-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-unlock text-yellow-400"></i> Insecure</span>
+                                <label><input type="checkbox" id="insecure-toggle" class="toggle-checkbox" checked disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Skip Verify (SNI)</div>
+                        </div>
+
+                        <!-- Bootstrap DNS -->
+                        <div id="bootstrap-dns-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-rocket text-orange-400"></i> Bootstrap DNS</span>
+                            </div>
+                            <select id="bootstrap-dns-select" class="modern-input w-full rounded text-xs p-1" disabled>
+                                <option value="google">Google (8.8.8.8)</option>
+                                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                            </select>
+                            <div class="text-[10px] text-gray-500 mt-1">Solo TUN</div>
+                        </div>
+
+                        <!-- DNS Seguro -->
+                        <div id="dns-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-shield text-green-400"></i> DNS Seguro</span>
+                                <label><input type="checkbox" id="dns-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div id="dns-details" class="hidden">
+                                <select id="dns-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="google">Google</option>
+                                    <option value="cloudflare">Cloudflare</option>
+                                </select>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">OFF: Dual DNS</div>
+                        </div>
+
+                        <!-- Fake IP (Nuevo) -->
+                        <div id="fakeip-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-ghost text-gray-400"></i> Fake IP</span>
+                                <label><input type="checkbox" id="fakeip-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1">Boost Speed (198.18.x.x)</div>
+                        </div>
+
+                        <!-- Fingerprint -->
+                        <div id="client-fingerprint-option-group" class="glass-option p-3 disabled-option">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-fingerprint text-blue-400"></i> uTLS</span>
+                                <label><input type="checkbox" id="client-fingerprint-toggle" class="toggle-checkbox" disabled><div class="toggle-switch"></div></label>
+                            </div>
+                            <div id="client-fingerprint-details" class="hidden">
+                                <select id="client-fingerprint-select" class="modern-input w-full rounded text-xs p-1">
+                                    <option value="chrome">Chrome</option>
+                                    <option value="randomized">Aleatorio</option>
+                                    <option value="android">Android</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="glass-card p-4 sticky top-4 z-10 shadow-lg">
+                    <button id="generate-btn" class="btn-gen w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2" disabled>
+                        <i class="fa-solid fa-bolt"></i> <span>GENERAR</span>
+                    </button>
+                    <button id="copy-btn" class="btn-copy w-full py-3 mt-3 rounded-xl font-semibold flex items-center justify-center gap-2" disabled>
+                        <i class="fa-solid fa-copy"></i> <span>COPIAR</span>
+                    </button>
+                </div>
+                
+                <div class="glass-card overflow-hidden flex-1 min-h-[400px]">
+                    <!-- FUTURISTIC HEADER BAR -->
+                    <div class="relative bg-gradient-to-r from-slate-900 via-[#1e293b] to-slate-900 px-4 py-2 border-b border-cyan-500/20 flex justify-between items-center shadow-lg">
+                        <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                        <span class="text-xs font-mono font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-sm tracking-wider">
+                            config.json
+                        </span>
+                        <div class="mac-dots">
+                            <div class="mac-dot mac-red shadow-inner"></div>
+                            <div class="mac-dot mac-yellow shadow-inner"></div>
+                            <div class="mac-dot mac-green shadow-inner"></div>
+                        </div>
+                    </div>
+                    
+                    <pre class="p-4 overflow-auto h-full text-xs font-mono text-purple-200 whitespace-pre-wrap break-all" id="output-config"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // UI Refs
+        const themeToggle = document.getElementById('theme-toggle');
+        const generateBtn = document.getElementById('generate-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const proxyLinksInput = document.getElementById('proxy-links');
+        const outputConfig = document.getElementById('output-config');
+        const statusContainer = document.getElementById('status-container');
+        
+        let selectedMode = 'tun';
+
+        // TUN Options
+        const tunOptionsContainer = document.getElementById('tun-options-container');
+        const stackToggle = document.getElementById('stack-toggle');
+        const stackDetails = document.getElementById('stack-details');
+        const stackDefaultText = document.getElementById('stack-default-text');
+        const stackSelect = document.getElementById('stack-select');
+        
+        const mtuToggle = document.getElementById('mtu-toggle');
+        const mtuInput = document.getElementById('mtu-input');
+        const mtuDetails = document.getElementById('mtu-details');
+        const mtuDefaultText = document.getElementById('mtu-default-text');
+
+        // TPROXY Options
+        const tproxyOptionsContainer = document.getElementById('tproxy-options-container');
+        const tproxyDnsSelect = document.getElementById('tproxy-dns-select');
+
+        // General Options
+        const keepAliveGroup = document.getElementById('keep-alive-option-group');
+        const keepAliveToggle = document.getElementById('keep-alive-toggle');
+        const insecureGroup = document.getElementById('insecure-option-group');
+        const insecureToggle = document.getElementById('insecure-toggle');
+        const bootstrapGroup = document.getElementById('bootstrap-dns-option-group');
+        const bootstrapSelect = document.getElementById('bootstrap-dns-select');
+        const dnsGroup = document.getElementById('dns-option-group');
+        const dnsToggle = document.getElementById('dns-toggle');
+        const dnsDetails = document.getElementById('dns-details');
+        const dnsSelect = document.getElementById('dns-select');
+        
+        // FAKE IP Ref
+        const fakeIpToggle = document.getElementById('fakeip-toggle');
+        const fakeIpGroup = document.getElementById('fakeip-option-group');
+
+        const fingerprintGroup = document.getElementById('client-fingerprint-option-group');
+        const fingerprintToggle = document.getElementById('client-fingerprint-toggle');
+        const fingerprintDetails = document.getElementById('client-fingerprint-details');
+        const fingerprintSelect = document.getElementById('client-fingerprint-select');
+
+        // Theme Logic
+        if(localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            themeToggle.innerHTML = '<i class="fas fa-sun text-xl text-orange-500"></i>';
+        } else {
+            themeToggle.innerHTML = '<i class="fas fa-moon text-xl"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            themeToggle.innerHTML = isLight ? '<i class="fas fa-sun text-xl text-orange-500"></i>' : '<i class="fas fa-moon text-xl"></i>';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        });
+
+        // Mode Switcher
+        window.selectMode = (mode) => {
+            selectedMode = mode;
+            document.getElementById('tun-btn').classList.toggle('active', mode === 'tun');
+            document.getElementById('tproxy-btn').classList.toggle('active', mode === 'tproxy');
+            updateUIState();
+        };
+
+        // Toggles
+        const toggleDisplay = (toggle, target, inverseTarget = null) => {
+            toggle.addEventListener('change', () => {
+                const isChecked = toggle.checked;
+                target.classList.toggle('hidden', !isChecked);
+                if (inverseTarget) inverseTarget.classList.toggle('hidden', isChecked);
+            });
+        };
+        toggleDisplay(dnsToggle, dnsDetails);
+        toggleDisplay(fingerprintToggle, fingerprintDetails);
+        
+        // MTU Toggle
+        toggleDisplay(mtuToggle, mtuDetails, mtuDefaultText);
+
+        // Stack Toggle
+        toggleDisplay(stackToggle, stackDetails, stackDefaultText);
+
+        function updateUIState() {
+            const hasLink = proxyLinksInput.value.trim().length > 0;
+            generateBtn.disabled = !hasLink;
+
+            const toggleGroup = (group, enabled) => {
+                group.classList.toggle('disabled-option', !enabled);
+                group.querySelectorAll('input, select').forEach(el => el.disabled = !enabled);
+            };
+
+            // Mode Dependent Options
+            if (selectedMode === 'tun') {
+                tunOptionsContainer.classList.remove('hidden');
+                tproxyOptionsContainer.classList.add('hidden');
+                
+                // Only enable if link is present
+                const tunEnabled = hasLink;
+                
+                stackToggle.disabled = !tunEnabled;
+                if(stackToggle.checked) stackSelect.disabled = !tunEnabled;
+
+                mtuToggle.disabled = !tunEnabled;
+                if(mtuToggle.checked) mtuInput.disabled = !tunEnabled;
+                
+                toggleGroup(bootstrapGroup, hasLink); // Bootstrap on for TUN
+                // FakeIP option logic for TUN
+                toggleGroup(fakeIpGroup, hasLink); 
+            } else {
+                tunOptionsContainer.classList.add('hidden');
+                tproxyOptionsContainer.classList.remove('hidden');
+                tproxyDnsSelect.disabled = !hasLink;
+
+                toggleGroup(bootstrapGroup, false); // Bootstrap off for TPROXY
+                // FakeIP option logic for TPROXY (Now enabled if hasLink)
+                toggleGroup(fakeIpGroup, hasLink); 
+            }
+
+            // General Options
+            toggleGroup(dnsGroup, hasLink);
+
+            // Protocol Detection
+            const isGrpc = proxyLinksInput.value.includes('type=grpc') || proxyLinksInput.value.includes('net=grpc');
+            const isTls = proxyLinksInput.value.includes('security=tls') || proxyLinksInput.value.includes('tls=1');
+
+            toggleGroup(keepAliveGroup, isGrpc);
+            if(isGrpc) keepAliveToggle.checked = true;
+
+            toggleGroup(insecureGroup, isTls);
+            toggleGroup(fingerprintGroup, isTls);
+            if(isTls) insecureToggle.checked = true;
+
+            if(hasLink) {
+                statusContainer.classList.remove('hidden');
+                statusContainer.textContent = "✅ Enlace Detectado";
+                statusContainer.className = "mx-auto max-w-2xl glass-card rounded-xl p-3 text-center font-bold text-sm text-green-400 bg-green-500/10 border border-green-500/20";
+            } else {
+                statusContainer.classList.add('hidden');
+            }
+        }
+
+        proxyLinksInput.addEventListener('input', updateUIState);
+
+        // --- PARSING & GENERATION ---
+        function parseLink(link) {
+            let server = "server", port = 443, uuid = "", type = "vless", serviceName = "gun", host = "";
+            let wsPath = "/";
+            try {
+                const url = new URL(link);
+                server = url.hostname;
+                port = parseInt(url.port) || 443;
+                uuid = url.username;
+                const params = new URLSearchParams(url.search);
+                serviceName = params.get('serviceName') || params.get('path') || "gun";
+                host = params.get('sni') || params.get('host') || server;
+                wsPath = params.get('path') || "/";
+                if (link.startsWith('vmess')) type = "vmess";
+                if (link.startsWith('trojan')) type = "trojan";
+            } catch(e) {}
+            return { server, port, uuid, type, serviceName, host, wsPath };
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const link = proxyLinksInput.value.trim();
+            if (!link) return;
+            const p = parseLink(link);
+
+            // Outbound Setup
+            const outbound = {
+                "type": p.type,
+                "tag": "proxy",
+                "server": p.server,
+                "server_port": p.port,
+                "uuid": p.uuid,
+                "packet_encoding": "xudp"
+            };
+
+            if (keepAliveToggle.checked) {
+                outbound.transport = {
+                    "type": "grpc",
+                    "service_name": p.serviceName,
+                    "idle_timeout": "2h",
+                    // "ping_timeout": "60s", REMOVED as per user request
+                    "permit_without_stream": true
+                };
+            } else {
+                if(!outbound.transport) {
+                    outbound.transport = { "type": "ws", "path": p.wsPath, "headers": { "Host": p.host } };
+                }
+            }
+
+            if (insecureToggle.checked) {
+                outbound.tls = { "enabled": true, "server_name": p.host, "insecure": true };
+                if(fingerprintToggle.checked) outbound.tls.utls = { "enabled": true, "fingerprint": fingerprintSelect.value };
+            }
+
+            let config = {};
+
+            if (selectedMode === 'tun') {
+                // --- TUN LOGIC ---
+                const bootstrapIp = (bootstrapSelect.value === 'google') ? '8.8.8.8' : '1.1.1.1';
+                const finalMtu = mtuToggle.checked ? parseInt(mtuInput.value) : 1400;
+                const finalStack = stackToggle.checked ? stackSelect.value : "system";
+                
+                // DNS: FIX "empty direct outbound" error
+                // We remove "detour": "direct" from bootstrap and local servers.
+                // We force their IPs to "direct" via Route Rules.
+                let tunDnsServers = [
+                    { "tag": "bootstrap", "type": "udp", "server": bootstrapIp } // REMOVED detour: direct
+                ];
+                let tunFinal = "google";
+
+                if (dnsToggle.checked) {
+                    // Secure Mode: ONLY the selected one
+                    if (dnsSelect.value === 'google') {
+                        tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
+                        tunFinal = "google";
+                    } else {
+                        tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
+                        tunFinal = "cloudflare";
+                    }
+                } else {
+                    // Default Mode: BOTH
+                    tunDnsServers.push({ "tag": "google", "type": "udp", "server": "8.8.8.8", "detour": "proxy" });
+                    tunDnsServers.push({ "tag": "cloudflare", "type": "udp", "server": "1.1.1.1", "detour": "proxy" });
+                    tunFinal = "google"; // Default fallback
+                }
+
+                tunDnsServers.push({ "tag": "local", "type": "local" }); // REMOVED detour: direct
+
+                // FAKE IP LOGIC
+                let dnsSection = {
+                    "servers": tunDnsServers,
+                    "rules": [ { "domain": [p.server], "server": "bootstrap" } ],
+                    "strategy": "ipv4_only",
+                    "final": tunFinal
+                };
+
+                if (fakeIpToggle.checked) {
+                    dnsSection.fakeip = {
+                        "enabled": true,
+                        "inet4_range": "198.18.0.0/15"
+                    };
+                }
+
+                config = {
+                    "log": { "level": "panic", "timestamp": true },
+                    "dns": dnsSection,
+                    "inbounds": [{
+                        "type": "tun", "tag": "tun-in", "interface_name": "tun0",
+                        "address": ["172.19.0.1/30"], 
+                        "mtu": finalMtu,
+                        "auto_route": true, "strict_route": true,
+                        "stack": finalStack, 
+                        "sniff": true,
+                        "sniff_override_destination": true // ADDED for perfect performance
+                    }],
+                    "outbounds": [outbound, { "type": "direct", "tag": "direct" }],
+                    "route": {
+                        "rules": [
+                            // FIX: Force Bootstrap DNS IP to use direct outbound explicitly via route rule
+                            { "ip_cidr": [bootstrapIp + "/32"], "outbound": "direct" },
+                            { "protocol": "dns", "action": "hijack-dns" },
+                            { "ip_is_private": true, "outbound": "direct" }
+                        ],
+                        "final": "proxy",
+                        "auto_detect_interface": true,
+                        "default_domain_resolver": "bootstrap"
+                    }
+                };
+
+            } else {
+                // --- TPROXY LOGIC ---
+                const directDnsIp = tproxyDnsSelect.value;
+                const directDns = { "type": "udp", "tag": "direct-dns", "server": directDnsIp };
+
+                let remoteServers = [];
+                if (dnsToggle.checked) {
+                    if (dnsSelect.value === 'google') {
+                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
+                    } else {
+                         remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
+                    }
+                } else {
+                    remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "8.8.8.8" });
+                    remoteServers.push({ "type": "udp", "tag": "remote", "detour": "proxy", "server": "1.1.1.1" });
+                }
+
+                // FAKE IP LOGIC FOR TPROXY
+                let dnsSection = {
+                    "servers": [ ...remoteServers, directDns ],
+                    "rules": [
+                        { "clash_mode": "direct", "action": "route", "server": "direct-dns" },
+                        { "clash_mode": "global", "action": "route", "server": "remote" }
+                    ],
+                    "final": "remote",
+                    "independent_cache": false,
+                    "strategy": "ipv4_only"
+                };
+
+                if (fakeIpToggle.checked) {
+                    dnsSection.fakeip = {
+                        "enabled": true,
+                        "inet4_range": "198.18.0.0/15"
+                    };
+                }
+
+                config = {
+                    "log": { "level": "panic" },
+                    "dns": dnsSection,
+                    "inbounds": [ { 
+                        "type": "tproxy", 
+                        "tag": "tproxy-in", 
+                        "listen": "::", 
+                        "listen_port": 9898,
+                        "sniff": true, // ADDED
+                        "sniff_override_destination": true // ADDED
+                    } ],
+                    "outbounds": [{ "type": "direct", "tag": "direct" }, outbound],
+                    "route": {
+                        "rules": [
+                            { "action": "sniff" },
+                            { "type": "logical", "mode": "or", "rules": [{ "port": 53 }, { "protocol": "dns" }], "action": "hijack-dns" },
+                            // Ensure direct DNS IP also goes direct
+                            { "ip_cidr": [directDnsIp + "/32"], "outbound": "direct" },
+                            { "clash_mode": "direct", "outbound": "direct" },
+                            { "clash_mode": "global", "outbound": "proxy" },
+                            { "ip_is_private": true, "outbound": "direct" }
+                        ],
+                        "final": "proxy",
+                        "find_process": false,
+                        "auto_detect_interface": true,
+                        "default_domain_resolver": { "server": "direct-dns" }
+                    }
+                };
+            }
+
+            outputConfig.textContent = JSON.stringify(config, null, 2);
+            
+            // Animation
+            generateBtn.innerHTML = '<i class="fa-solid fa-check"></i> ¡CONFIG GENERADA!';
+            generateBtn.classList.add('btn-success');
+            setTimeout(() => {
+                 generateBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> GENERAR';
+                 generateBtn.classList.remove('btn-success');
+            }, 2000);
+            copyBtn.disabled = false;
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const text = outputConfig.textContent;
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> ¡COPIADO!';
+            copyBtn.classList.add('text-green-400');
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> COPIAR';
+                copyBtn.classList.remove('text-green-400');
+            }, 2000);
+        });
+    });
+    </script>
+</body>
+</html>
